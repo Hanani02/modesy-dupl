@@ -12,11 +12,9 @@ import ModesyFooter from "@/components/layout/ModesyFooter";
 
 export default function Home() {
   return (
-    <><main className="min-h-screen bg-[#f8f9fa]">
-      <Hero />
-      <NewArrivals />
-      <ClothingSection />
-    </main><div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans text-gray-800">
+    <>
+    <main>
+    <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans text-gray-800">
         {/* Modesy Header (Guest View) */}
         <ModesyHeader />
 
@@ -53,6 +51,8 @@ export default function Home() {
 
         {/* Modesy Footer */}
         <ModesyFooter />
-      </div></>
+      </div>
+      </main>
+      </>
   );
 }
