@@ -1,3 +1,6 @@
+import Hero from "@/components/Hero";
+import NewArrivals from "@/components/NewArrivals";
+import ClothingSection from "@/components/ClothingSection";
 "use client";
 
 import React, { useState } from "react";
@@ -13,6 +16,11 @@ export default function Home() {
   const [currentUser, setCurrentUser] = useState<{ email: string; name: string } | null>(null);
 
   return (
+    <main className="min-h-screen bg-[#f8f9fa]">
+      <Hero />
+      <NewArrivals />
+      <ClothingSection />
+    </main>
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans text-gray-800">
       {/* Header Modesy */}
       <Header
