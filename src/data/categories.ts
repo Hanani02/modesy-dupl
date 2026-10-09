@@ -6,6 +6,7 @@ export interface SubCategory {
 export interface CategoryImage {
   label: string;
   image: string;
+  url?: string;
 }
 
 export interface CategoryItem {

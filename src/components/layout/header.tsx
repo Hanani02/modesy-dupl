@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { CATEGORIES, CategoryItem } from "@/data/categories";
 import LocationModal from "@/components/modals/LocationModal";
 
@@ -87,18 +88,18 @@ export default function Header({
         <div className="max-w-[1320px] mx-auto px-4 py-[7px] flex items-center justify-between">
           {/* Left links */}
           <div className="flex items-center space-x-5">
-            <button
-              type="button"
-              className="text-[#666666] hover:text-[#00a99d] transition-colors cursor-pointer bg-transparent border-0 p-0 text-[14px]"
+            <Link
+              href="/"
+              className="text-[#666666] hover:text-[#00a99d] transition-colors cursor-pointer text-[14px]"
             >
               Contact
-            </button>
-            <button
-              type="button"
-              className="text-[#666666] hover:text-[#00a99d] transition-colors cursor-pointer bg-transparent border-0 p-0 text-[14px]"
+            </Link>
+            <Link
+              href="/"
+              className="text-[#666666] hover:text-[#00a99d] transition-colors cursor-pointer text-[14px]"
             >
               Sell on Modesy
-            </button>
+            </Link>
           </div>
 
           {/* Right links */}
@@ -258,21 +259,29 @@ export default function Header({
               </div>
             ) : (
               <div className="flex items-center">
-                <button
-                  type="button"
-                  onClick={onOpenLoginModal}
-                  className="text-[#666666] hover:text-[#00a99d] transition-colors cursor-pointer bg-transparent border-0 p-0 text-[14px]"
-                >
-                  Login
-                </button>
+                {onOpenLoginModal ? (
+                  <button
+                    type="button"
+                    onClick={onOpenLoginModal}
+                    className="text-[#666666] hover:text-[#00a99d] transition-colors cursor-pointer bg-transparent border-0 p-0 text-[14px]"
+                  >
+                    Login
+                  </button>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="text-[#666666] hover:text-[#00a99d] transition-colors cursor-pointer text-[14px]"
+                  >
+                    Login
+                  </Link>
+                )}
                 <span className="text-[#333e48] text-[13px] mx-2">/</span>
-                <button
-                  type="button"
-                  onClick={onOpenLoginModal}
-                  className="text-[#666666] hover:text-[#00a99d] transition-colors cursor-pointer bg-transparent border-0 p-0 text-[14px]"
+                <Link
+                  href="/register"
+                  className="text-[#666666] hover:text-[#00a99d] transition-colors cursor-pointer text-[14px]"
                 >
                   Register
-                </button>
+                </Link>
               </div>
             )}
           </div>
@@ -286,10 +295,7 @@ export default function Header({
           <div className="flex items-center flex-1 mr-8">
             {/* Logo */}
             <div className="shrink-0 mr-6">
-              <button
-                type="button"
-                className="p-0 border-0 bg-transparent cursor-pointer block"
-              >
+              <Link href="/" className="block">
                 <img
                   src="/assets/img/logo.svg"
                   alt="Modesy"
@@ -297,7 +303,7 @@ export default function Header({
                   height={60}
                   className="w-[160px] h-[60px] object-contain"
                 />
-              </button>
+              </Link>
             </div>
 
             {/* Search Bar */}
@@ -334,8 +340,8 @@ export default function Header({
           {/* Right Actions: Cart, Wishlist, Sell Now */}
           <div className="flex items-center space-x-7 shrink-0">
             {/* Cart */}
-            <button
-              type="button"
+            <Link
+              href="/"
               className="flex items-center text-[#555555] hover:text-[#00a99d] transition-colors cursor-pointer bg-transparent border-0 p-0 relative group"
             >
               <div className="relative mr-1.5 flex items-center">
@@ -360,11 +366,11 @@ export default function Header({
               <span className="text-[14px] font-medium leading-[26px]">
                 Cart
               </span>
-            </button>
+            </Link>
 
             {/* Wishlist */}
-            <button
-              type="button"
+            <Link
+              href="/"
               className="flex items-center text-[#555555] hover:text-[#00a99d] transition-colors cursor-pointer bg-transparent border-0 p-0"
             >
               <div className="mr-1.5 flex items-center">
@@ -384,15 +390,25 @@ export default function Header({
               <span className="text-[14px] font-medium leading-[26px]">
                 Wishlist
               </span>
-            </button>
+            </Link>
 
             {/* Sell Now Button */}
-            <button
-              type="button"
-              className="bg-[#00a99d] hover:brightness-95 text-white text-[14px] font-medium px-5 py-2 rounded-[3px] transition-all cursor-pointer border-0 leading-[22px]"
-            >
-              Sell Now
-            </button>
+            {onOpenLoginModal ? (
+              <button
+                type="button"
+                onClick={onOpenLoginModal}
+                className="bg-[#00a99d] hover:brightness-95 text-white text-[14px] font-medium px-5 py-2 rounded-[3px] transition-all cursor-pointer border-0 leading-[22px]"
+              >
+                Sell Now
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="bg-[#00a99d] hover:brightness-95 text-white text-[14px] font-medium px-5 py-2 rounded-[3px] transition-all cursor-pointer border-0 leading-[22px] inline-block text-center"
+              >
+                Sell Now
+              </Link>
+            )}
           </div>
         </div>
       </div>
