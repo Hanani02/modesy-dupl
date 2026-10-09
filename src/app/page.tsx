@@ -1,52 +1,54 @@
-"use client";
-
-import React, { useState } from "react";
 import ModesyHeader from "@/components/layout/ModesyHeader";
-import ModesyFooter from "@/components/layout/ModesyFooter";
-import LoginModal from "@/components/auth/LoginModal";
-import HeroBanner from "@/components/layout/Hero-Banner";
-import ShopByCategory from "@/components/layout/Shop-By-Category";
-import SpecialOffers from "@/components/layout/Special-Offers";
+import Hero from "@/components/Hero";
+import ShopByCategory from "@/components/ShopCategory/ShopByCategory";
+import SpecialOffers from "@/components/home/SpecialOffers";
 import FeaturedProducts from "@/components/layout/Featured-Products";
-import NewArrivals from "@/components/layout/New-Arrivals";
-import CategoryClothing from "@/components/layout/Category-Clothing";
-import CategoryJewelry from "@/components/layout/Category-Jewelry";
-import ShopByBrand from "@/components/layout/Shop-By-Brand";
-import LatestBlogPosts from "@/components/layout/Latest-Blog-Posts";
+import NewArrivals from "@/components/NewArrivals";
+import ClothingSection from "@/components/ClothingSection";
+import JewelrySection from "@/components/home/JewelrySection";
+import BrandSection from "@/components/home/BrandSection";
+import BlogSection from "@/components/home/BlogSection";
+import ModesyFooter from "@/components/layout/ModesyFooter";
 
 export default function Home() {
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ email: string; name: string } | null>(null);
-
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col font-sans text-gray-800">
-      <ModesyHeader
-        onOpenLoginModal={() => setIsLoginModalOpen(true)}
-        currentUser={currentUser}
-        onLogout={() => setCurrentUser(null)}
-      />
-      
-      <main className="flex-1 w-full space-y-8 pb-8">
-        <HeroBanner />
-        <ShopByCategory />
-        <SpecialOffers />
-        <FeaturedProducts />
-        <NewArrivals />
-        <CategoryClothing />
-        <CategoryJewelry />
-        <ShopByBrand />
-        <LatestBlogPosts />
+      {/* Modesy Header (Guest View) */}
+      <ModesyHeader />
+
+      <main className="flex-1 w-full space-y-6 pb-12">
+        {/* 1. Hero Carousel Slider Banner */}
+        <Hero />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
+          {/* 2. Shop By Category */}
+          <ShopByCategory />
+
+          {/* 3. Special Offers + Promo Banners */}
+          <SpecialOffers />
+
+          {/* 4. Featured Products */}
+          <FeaturedProducts />
+
+          {/* 5. New Arrivals + Promo Banners */}
+          <NewArrivals />
+
+          {/* 6. Clothing Section with Subcategory Filters */}
+          <ClothingSection />
+
+          {/* 7. Jewelry & Accessories Carousel */}
+          <JewelrySection />
+
+          {/* 8. Shop By Brand */}
+          <BrandSection />
+
+          {/* 9. Latest Blog Posts */}
+          <BlogSection />
+        </div>
       </main>
 
+      {/* Modesy Footer */}
       <ModesyFooter />
-      
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onSuccess={(user) => {
-          setCurrentUser(user);
-        }}
-      />
     </div>
   );
 }

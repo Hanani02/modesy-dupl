@@ -10,16 +10,12 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   const hasMultipleImages = Boolean(product.secondaryImage);
-  const currentImage = isHovered && product.secondaryImage ? product.secondaryImage : product.image;
 
   return (
     <div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       className="group relative bg-white border border-gray-200 rounded-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow duration-200"
     >
       {/* ================= THUMBNAIL AREA ================= */}
@@ -32,36 +28,46 @@ export default function ProductCard({ product }: ProductCardProps) {
         )}
 
         {/* Product Image with smooth hover transition */}
-        <Link href={`/product/${product.id}`} className="block w-full h-full">
+        <Link href={`/product/${product.id}`} className="block w-full h-full relative overflow-hidden">
+          {/* Primary / Base Image */}
           <img
-            src={currentImage}
+            src={product.image}
             alt={product.title}
-            className="w-full h-full object-cover object-center transition-all duration-300"
+            className={`w-full h-full object-cover object-center transition-all duration-500 ease-in-out group-hover:scale-105 ${
+              hasMultipleImages ? "group-hover:opacity-0" : ""
+            }`}
             loading="lazy"
           />
+
+          {/* Secondary / Alternate Image (smooth cross-fade) */}
+          {hasMultipleImages && (
+            <img
+              src={product.secondaryImage}
+              alt={`${product.title} alternate view`}
+              className="absolute inset-0 w-full h-full object-cover object-center transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100 group-hover:scale-105"
+              loading="lazy"
+            />
+          )}
         </Link>
 
-        {/* Hover Controls (Multiple Images Indicator & Quick Actions) */}
-        {hasMultipleImages && isHovered && (
-          <div className="absolute left-2.5 bottom-2.5 z-10 w-7 h-7 rounded-full bg-white/90 border border-gray-200 shadow-sm flex items-center justify-center text-gray-700 pointer-events-none">
+        {/* Hover Controls (Multiple Images Indicator) */}
+        {hasMultipleImages && (
+          <div className="absolute left-2.5 bottom-2.5 z-10 w-7 h-7 rounded-full bg-white/90 border border-gray-200 shadow-sm flex items-center justify-center text-gray-700 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <ChevronLeft className="w-4 h-4" />
           </div>
         )}
 
         {/* Floating Quick Action Buttons (Top Right on hover) */}
-        <div
-          className={`absolute top-2 right-2 z-10 flex flex-col gap-1.5 transition-opacity duration-200 ${
-            isHovered ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-        >
+        <div className="absolute top-2 right-2 z-10 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300 ease-out">
           {/* Add to Cart button */}
           <button
             type="button"
             onClick={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               alert(`Added "${product.title}" to cart!`);
             }}
-            className="w-8 h-8 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-700 hover:text-[#00a99d] hover:border-[#00a99d] transition cursor-pointer"
+            className="w-8 h-8 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-700 hover:text-[#00a99d] hover:border-[#00a99d] transition cursor-pointer hover:scale-110 active:scale-95"
             title="Add to cart"
             aria-label="Add to cart"
           >
@@ -73,14 +79,15 @@ export default function ProductCard({ product }: ProductCardProps) {
             type="button"
             onClick={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               setIsWishlisted(!isWishlisted);
             }}
-            className="w-8 h-8 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-700 hover:text-rose-500 hover:border-rose-300 transition cursor-pointer"
-            title="Add to wishlist"
+            className="w-8 h-8 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-700 hover:text-rose-500 hover:border-rose-300 transition cursor-pointer hover:scale-110 active:scale-95"
+            title={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             aria-label="Add to wishlist"
           >
             <Heart
-              className={`w-3.5 h-3.5 ${
+              className={`w-3.5 h-3.5 transition-colors ${
                 isWishlisted ? "fill-rose-500 text-rose-500" : ""
               }`}
             />
@@ -122,16 +129,27 @@ export default function ProductCard({ product }: ProductCardProps) {
               ))}
             </div>
 
-            <div className="flex items-center gap-1 text-[11px] text-gray-400">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsWishlisted(!isWishlisted);
+              }}
+              className="flex items-center gap-1 text-[11px] text-gray-400 hover:text-rose-500 transition-colors cursor-pointer bg-transparent border-0 p-0"
+              title={isWishlisted ? "Unlike" : "Like"}
+            >
               <Heart
-                className={`w-3 h-3 ${
+                className={`w-3 h-3 transition-colors ${
                   isWishlisted || product.favorites > 0
                     ? "fill-rose-400 text-rose-400 stroke-none"
                     : "text-gray-300 stroke-[1.5]"
                 }`}
               />
-              <span>{isWishlisted ? product.favorites + 1 : product.favorites}</span>
-            </div>
+              <span className={isWishlisted ? "text-rose-500 font-semibold" : ""}>
+                {isWishlisted ? product.favorites + 1 : product.favorites}
+              </span>
+            </button>
           </div>
 
           {/* Pricing Logic:
