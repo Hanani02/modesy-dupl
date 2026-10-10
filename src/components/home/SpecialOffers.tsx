@@ -43,6 +43,10 @@ export default function SpecialOffers() {
     return () => window.removeEventListener("resize", updateItemsPerView);
   }, []);
 
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const startXRef = useRef<number | null>(null);
+
   // Slide navigation
   const handleNext = () => {
     if (isMoving) return;
@@ -56,6 +60,55 @@ export default function SpecialOffers() {
     setIsMoving(true);
     setIsTransitioning(true);
     setCurrentIndex((prev) => prev - 1);
+  };
+
+  // Drag & Swipe navigation (Fungsi Geser)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    startXRef.current = e.clientX;
+    setDragOffset(0);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || startXRef.current === null) return;
+    const currentX = e.clientX;
+    setDragOffset(currentX - startXRef.current);
+  };
+
+  const handleMouseUp = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (dragOffset > 40) {
+      handlePrev();
+    } else if (dragOffset < -40) {
+      handleNext();
+    }
+    setDragOffset(0);
+    startXRef.current = null;
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    startXRef.current = e.touches[0].clientX;
+    setDragOffset(0);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || startXRef.current === null) return;
+    const currentX = e.touches[0].clientX;
+    setDragOffset(currentX - startXRef.current);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (dragOffset > 40) {
+      handlePrev();
+    } else if (dragOffset < -40) {
+      handleNext();
+    }
+    setDragOffset(0);
+    startXRef.current = null;
   };
 
   // Reset position seamlessly when reaching boundary
@@ -156,13 +209,25 @@ export default function SpecialOffers() {
         </button>
 
         {/* SLIDER VIEWPORT & SMOOTH SLIDING TRACK */}
-        <div className="overflow-hidden w-full py-1">
+        <div
+          className={`overflow-hidden w-full py-1 ${
+            isDragging ? "cursor-grabbing" : "cursor-grab"
+          }`}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div
             className="flex will-change-transform"
             style={{
-              transform: `translateX(-${currentIndex * itemWidthPercentage}%)`,
-              transition: isTransitioning
-                ? "transform 550ms cubic-bezier(0.25, 1, 0.5, 1)"
+              transform: `translateX(calc(-${currentIndex * itemWidthPercentage}% + ${dragOffset}px))`,
+              transition: isDragging
+                ? "none"
+                : isTransitioning
+                ? "transform 600ms cubic-bezier(0.25, 1, 0.5, 1)"
                 : "none",
             }}
             onTransitionEnd={handleTransitionEnd}
