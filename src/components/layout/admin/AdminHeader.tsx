@@ -2,16 +2,18 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { CATEGORIES } from "@/data/categories";
 import LocationModal from "@/components/modals/LocationModal";
 import {
+  Shield,
   ShieldAlert,
-  LayoutDashboard,
+  LayoutGrid,
   User,
   Wallet,
-  ShoppingBag,
-  Ticket,
-  Mail,
+  ShoppingBasket,
+  Tag,
+  MessageSquare,
   Settings,
   LogOut,
   ChevronDown,
@@ -29,8 +31,77 @@ export default function AdminHeader() {
     name: "English",
     flag: "/assets/img/flag_eng.jpg",
   });
+  const pathname = usePathname();
   const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
   const [hoveredCategoryId, setHoveredCategoryId] = useState<string | null>(null);
+
+  // Daftar menu dropdown profil admin sesuai urutan foto (Admin Panel berada di atas Dashboard)
+  const adminProfileMenus = [
+    {
+      title: "Admin Panel",
+      href: "/admin/admin-panel",
+      icon: Shield,
+      match: (path: string) => path.startsWith("/admin/admin-panel"),
+    },
+    {
+      title: "Dashboard",
+      href: "/admin/dashboard",
+      icon: LayoutGrid,
+      match: (path: string) => path === "/admin/dashboard" || path.startsWith("/admin/dashboard/"),
+    },
+    {
+      title: "Profile",
+      href: "/admin/profile",
+      icon: User,
+      match: (path: string) => path === "/admin/profile" || path.startsWith("/admin/profile/"),
+    },
+    {
+      title: "Wallet",
+      href: "/admin/wallet",
+      icon: Wallet,
+      match: (path: string) => path === "/admin/wallet" || path.startsWith("/admin/wallet/"),
+    },
+    {
+      title: "Orders",
+      href: "/admin/orders",
+      icon: ShoppingBasket,
+      match: (path: string) => path === "/admin/orders" || path.startsWith("/admin/orders/"),
+    },
+    {
+      title: "My Coupons",
+      href: "/admin/my-coupons",
+      icon: Tag,
+      match: (path: string) =>
+        path.startsWith("/admin/my-coupons") || path.startsWith("/admin/my-coupns"),
+    },
+    {
+      title: "Messages",
+      href: "/admin/messages",
+      icon: MessageSquare,
+      match: (path: string) =>
+        path.startsWith("/admin/messages") || path.startsWith("/admin/massages"),
+    },
+    {
+      title: "Profile Settings",
+      href: "/admin/profile-settings",
+      icon: Settings,
+      match: (path: string) => path.startsWith("/admin/profile-settings"),
+    },
+    {
+      title: "Logout",
+      href: "/guest",
+      icon: LogOut,
+      match: () => false,
+    },
+  ];
+
+  // Aturan pengguna:
+  // "di saat kita membuka salah satu menu tersebut menu itu akan hilang jika kita lihat, kecuali kita berpindah menu atau ke beranda dia akan muncul"
+  const isHome = pathname === "/admin" || pathname === "/admin/";
+  const visibleMenus = adminProfileMenus.filter((item) => {
+    if (isHome) return true;
+    return !item.match(pathname || "");
+  });
 
   // Location modal
   const [locationModalOpen, setLocationModalOpen] = useState(false);
@@ -221,109 +292,28 @@ export default function AdminHeader() {
                 <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
               </button>
 
-              {/* Dropdown Menu Sesuai Permintaan User:
-                  Admin Panel, Dashboard, profile, wallet, orders, my coupns, massages, profile settings, dan logout */}
+              {/* Dropdown Menu Sesuai Foto User:
+                  Admin Panel (posisi di atas Dashboard), Dashboard, Profile, Wallet, Orders, My Coupons, Messages, Profile Settings, Logout.
+                  Sistem: Saat membuka salah satu menu, menu tersebut disembunyikan. Saat ke beranda (/admin), semua menu muncul. */}
               {adminDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-[#ebebeb] rounded-sm shadow-xl z-50 py-2 text-[13px]">
-                  <div className="px-4 py-2 border-b border-gray-100 bg-red-50/40">
-                    <p className="font-semibold text-gray-900 flex items-center gap-1.5">
-                      <ShieldAlert className="w-3.5 h-3.5 text-red-600" />
-                      admin
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">admin@codingest.com</p>
-                  </div>
-
-                  {/* 1. Admin Panel */}
-                  <Link
-                    href="/admin/admin-panel"
-                    onClick={() => setAdminDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-red-700 bg-red-50/30 font-semibold hover:bg-red-50"
-                  >
-                    <ShieldAlert className="w-4 h-4 text-red-600" />
-                    <span>Admin Panel</span>
-                  </Link>
-
-                  {/* 2. Dashboard */}
-                  <Link
-                    href="/admin/dashboard"
-                    onClick={() => setAdminDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d]"
-                  >
-                    <LayoutDashboard className="w-4 h-4 text-gray-400" />
-                    <span>Dashboard</span>
-                  </Link>
-
-                  {/* 3. Profile */}
-                  <Link
-                    href="/admin/profile"
-                    onClick={() => setAdminDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d]"
-                  >
-                    <User className="w-4 h-4 text-gray-400" />
-                    <span>Profile</span>
-                  </Link>
-
-                  {/* 4. Wallet */}
-                  <Link
-                    href="/admin/wallet"
-                    onClick={() => setAdminDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d]"
-                  >
-                    <Wallet className="w-4 h-4 text-gray-400" />
-                    <span>Wallet</span>
-                  </Link>
-
-                  {/* 5. Orders */}
-                  <Link
-                    href="/admin/orders"
-                    onClick={() => setAdminDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d]"
-                  >
-                    <ShoppingBag className="w-4 h-4 text-gray-400" />
-                    <span>Orders</span>
-                  </Link>
-
-                  {/* 6. My Coupons */}
-                  <Link
-                    href="/admin/my-coupons"
-                    onClick={() => setAdminDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d]"
-                  >
-                    <Ticket className="w-4 h-4 text-gray-400" />
-                    <span>My Coupons</span>
-                  </Link>
-
-                  {/* 7. Messages */}
-                  <Link
-                    href="/admin/messages"
-                    onClick={() => setAdminDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d]"
-                  >
-                    <Mail className="w-4 h-4 text-gray-400" />
-                    <span>Messages</span>
-                  </Link>
-
-                  {/* 8. Profile Settings */}
-                  <Link
-                    href="/admin/profile-settings"
-                    onClick={() => setAdminDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d]"
-                  >
-                    <Settings className="w-4 h-4 text-gray-400" />
-                    <span>Profile Settings</span>
-                  </Link>
-
-                  <div className="border-t border-gray-100 my-1"></div>
-
-                  {/* 9. Logout */}
-                  <Link
-                    href="/guest"
-                    onClick={() => setAdminDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-red-600 hover:bg-red-50"
-                  >
-                    <LogOut className="w-4 h-4 text-red-500" />
-                    <span>Logout</span>
-                  </Link>
+                <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-gray-200 rounded-[3px] shadow-lg z-50 py-2">
+                  {visibleMenus.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.title}
+                        href={item.href}
+                        onClick={() => setAdminDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2 text-[14px] text-gray-700 hover:text-[#00a99d] hover:bg-gray-50/80 transition-colors font-normal group"
+                      >
+                        <Icon
+                          className="w-[18px] h-[18px] text-gray-500 group-hover:text-[#00a99d] transition-colors shrink-0"
+                          strokeWidth={1.75}
+                        />
+                        <span className="truncate">{item.title}</span>
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>

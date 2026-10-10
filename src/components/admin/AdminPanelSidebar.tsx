@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -8,13 +8,12 @@ import {
   Palette,
   Sliders,
   LayoutTemplate,
+  ShoppingCart,
   ShoppingBag,
-  Download,
-  RotateCcw,
-  Package,
-  FileText,
-  FolderTree,
+  Flag,
+  ShoppingBasket,
   Tag,
+  FolderTree,
   Bookmark,
   Layers,
   CreditCard,
@@ -39,20 +38,32 @@ import {
   Ban,
   SlidersHorizontal,
   Settings,
-  ChevronRight,
-  ShieldAlert,
+  ChevronLeft,
+  ChevronDown,
+  FileText,
 } from "lucide-react";
 
-export interface NavItem {
+export interface SubMenuItem {
+  title: string;
+  href: string;
+}
+
+export interface NavMenuItem {
   title: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  badge?: string;
+  hasSubmenu?: boolean;
+  subItems?: SubMenuItem[];
 }
 
-export const ADMIN_PANEL_NAV_SECTIONS = [
+export interface NavSection {
+  heading: string;
+  items: NavMenuItem[];
+}
+
+export const ADMIN_PANEL_NAV_SECTIONS: NavSection[] = [
   {
-    heading: "MAIN NAVIGATION",
+    heading: "NAVIGATION",
     items: [
       { title: "Home", href: "/admin/admin-panel/home", icon: Home },
       { title: "Theme", href: "/admin/admin-panel/theme", icon: Palette },
@@ -61,18 +72,18 @@ export const ADMIN_PANEL_NAV_SECTIONS = [
     ],
   },
   {
-    heading: "ORDERS & SALES",
+    heading: "ORDERS",
     items: [
-      { title: "Orders", href: "/admin/admin-panel/orders", icon: ShoppingBag, badge: "8" },
-      { title: "Digital Sales", href: "/admin/admin-panel/digital-sales", icon: Download },
-      { title: "Refund Request", href: "/admin/admin-panel/refund-requests", icon: RotateCcw },
+      { title: "Orders", href: "/admin/admin-panel/orders", icon: ShoppingCart, hasSubmenu: true },
+      { title: "Digital Sales", href: "/admin/admin-panel/digital-sales", icon: ShoppingBag },
+      { title: "Refund Requests", href: "/admin/admin-panel/refund-requests", icon: Flag },
     ],
   },
   {
-    heading: "PRODUCTS & CATALOG",
+    heading: "PRODUCTS",
     items: [
-      { title: "Products", href: "/admin/admin-panel/products", icon: Package },
-      { title: "Quote Request", href: "/admin/admin-panel/quote-requests", icon: FileText },
+      { title: "Products", href: "/admin/admin-panel/products", icon: ShoppingBasket, hasSubmenu: true },
+      { title: "Quote Requests", href: "/admin/admin-panel/quote-requests", icon: Tag },
       { title: "Categories", href: "/admin/admin-panel/categories", icon: FolderTree },
       { title: "Tags", href: "/admin/admin-panel/tags", icon: Tag },
       { title: "Brands", href: "/admin/admin-panel/brands", icon: Bookmark },
@@ -80,7 +91,7 @@ export const ADMIN_PANEL_NAV_SECTIONS = [
     ],
   },
   {
-    heading: "FINANCE & EARNINGS",
+    heading: "PAYMENTS",
     items: [
       { title: "Payments", href: "/admin/admin-panel/payments", icon: CreditCard },
       { title: "Earning", href: "/admin/admin-panel/earnings", icon: DollarSign },
@@ -88,45 +99,49 @@ export const ADMIN_PANEL_NAV_SECTIONS = [
     ],
   },
   {
-    heading: "CONTENT MANAGEMENT",
+    heading: "CONTENT",
     items: [
       { title: "Pages", href: "/admin/admin-panel/pages", icon: FileCode },
-      { title: "Blog", href: "/admin/admin-panel/blog", icon: Newspaper },
+      {
+        title: "Blog",
+        href: "/admin/admin-panel/blog/posts",
+        icon: FileText,
+        hasSubmenu: true,
+        subItems: [
+          { title: "Posts", href: "/admin/admin-panel/blog/posts" },
+          { title: "Categories", href: "/admin/admin-panel/blog/categories" },
+        ],
+      },
       { title: "Location", href: "/admin/admin-panel/location", icon: MapPin },
     ],
   },
   {
-    heading: "MEMBERSHIP & ACCESS",
+    heading: "MEMBERSHIP",
     items: [
       { title: "Membership", href: "/admin/admin-panel/membership", icon: Users },
       { title: "Roles & Permissions", href: "/admin/admin-panel/roles-permissions", icon: Shield },
     ],
   },
   {
-    heading: "COMMUNITY & MESSAGES",
-    items: [
-      { title: "Chat Messages", href: "/admin/admin-panel/chat-messages", icon: MessageSquare },
-      { title: "Contact Messages", href: "/admin/admin-panel/contact-messages", icon: Mail },
-      { title: "Reviews", href: "/admin/admin-panel/reviews", icon: Star },
-      { title: "Comments", href: "/admin/admin-panel/comments", icon: MessageCircle },
-      { title: "Newsletter", href: "/admin/admin-panel/newsletter", icon: Send },
-    ],
-  },
-  {
-    heading: "MARKETING & ADS",
-    items: [
-      { title: "Ad Spaces", href: "/admin/admin-panel/ad-spaces", icon: Tv },
-      { title: "Affiliate Program", href: "/admin/admin-panel/affiliate-program", icon: Share2 },
-    ],
-  },
-  {
-    heading: "SYSTEM & TOOLS",
+    heading: "MANAGEMENT TOOLS",
     items: [
       { title: "Help Center", href: "/admin/admin-panel/help-center", icon: HelpCircle },
       { title: "Cache System", href: "/admin/admin-panel/cache-system", icon: Database },
       { title: "SEO Tools", href: "/admin/admin-panel/seo-tools", icon: Search },
+      { title: "Ad Spaces", href: "/admin/admin-panel/ad-spaces", icon: Tv },
+      { title: "Chat Massages", href: "/admin/admin-panel/chat-messages", icon: MessageSquare },
+      { title: "Contact Massages", href: "/admin/admin-panel/contact-messages", icon: Mail },
+      { title: "Reviews", href: "/admin/admin-panel/reviews", icon: Star },
+      { title: "Comments", href: "/admin/admin-panel/comments", icon: MessageCircle },
+      { title: "Newsletter", href: "/admin/admin-panel/newsletter", icon: Send },
+      { title: "Affiliate Program", href: "/admin/admin-panel/affiliate-program", icon: Share2 },
       { title: "Abuse Reports", href: "/admin/admin-panel/abuse-reports", icon: AlertTriangle },
-      { title: "Email Blacklist", href: "/admin/admin-panel/email-blacklist", icon: Ban },
+      { title: "Email Black List", href: "/admin/admin-panel/email-blacklist", icon: Ban },
+    ],
+  },
+  {
+    heading: "SETTINGS",
+    items: [
       { title: "Preferences", href: "/admin/admin-panel/preferences", icon: SlidersHorizontal },
       { title: "Settings", href: "/admin/admin-panel/settings", icon: Settings },
     ],
@@ -140,94 +155,196 @@ interface SidebarProps {
 
 export default function AdminPanelSidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const [openSubmenus, setOpenSubmenus] = React.useState<Record<string, boolean>>({
+    Blog: true,
+  });
+
+  const toggleSubmenu = (title: string) => {
+    setOpenSubmenus((prev) => ({
+      ...prev,
+      [title]: !prev[title],
+    }));
+  };
 
   return (
     <aside
-      className={`fixed top-0 left-0 bottom-0 z-40 w-64 bg-[#222d32] text-[#b8c7ce] flex flex-col transition-transform duration-300 ease-in-out font-sans ${
-        isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      className={`fixed top-0 left-0 bottom-0 z-40 w-64 bg-[#343b4a] text-[#95a2b5] flex flex-col font-sans transition-all duration-300 ease-in-out select-none overflow-y-auto scrollbar-thin scrollbar-thumb-[#4a5568] scrollbar-track-transparent ${
+        isOpen
+          ? "translate-x-0 opacity-100 visible"
+          : "-translate-x-full lg:-translate-x-full opacity-0 invisible pointer-events-none"
       }`}
     >
-      {/* Brand Header */}
-      <div className="h-14 bg-[#1a2226] border-b border-[#10171a] px-5 flex items-center justify-between shrink-0">
-        <Link href="/admin/admin-panel/home" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded bg-[#00a99d] text-white flex items-center justify-center font-bold text-sm shadow">
-            M
-          </div>
-          <div>
-            <span className="text-white font-bold text-base tracking-wide">MODESY</span>
-            <span className="text-[10px] text-gray-400 block -mt-1 uppercase tracking-wider font-semibold">
-              Admin Panel
-            </span>
-          </div>
-        </Link>
+      {/* 1. BRAND HEADER: "Modesy Panel" (Ikut ter-scroll & Klik untuk Refresh Halaman) */}
+      <div className="pt-6 pb-4 text-center shrink-0">
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              window.location.reload();
+            }
+          }}
+          className="inline-flex items-center justify-center cursor-pointer bg-transparent border-0 p-0 focus:outline-none group"
+          title="Refresh Halaman"
+        >
+          <span className="font-bold text-white text-[23px] tracking-tight group-hover:text-gray-200 transition-colors">
+            Modesy
+          </span>
+          <span className="font-normal text-[#c6ccd6] text-[23px] ml-1.5 group-hover:text-white transition-colors">
+            Panel
+          </span>
+        </button>
       </div>
 
-      {/* Admin User Mini Card */}
-      <div className="px-5 py-4 bg-[#1e282c] border-b border-[#182024] flex items-center gap-3 shrink-0">
-        <div className="w-9 h-9 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-xs shadow">
-          <ShieldAlert className="w-4 h-4" />
+      {/* 2. USER PROFILE: Avatar Nebula + "Admin" + "● Online" (Ikut ter-scroll) */}
+      <div className="px-6 py-2 flex items-center gap-4 shrink-0">
+        {/* Nebula Avatar Circle */}
+        <div className="w-[50px] h-[50px] rounded-full overflow-hidden shrink-0 relative bg-slate-900 shadow-sm ring-1 ring-white/10">
+          <div className="absolute inset-0 bg-gradient-to-tr from-purple-700 via-pink-500 to-cyan-400 opacity-95" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_35%_35%,rgba(255,255,255,0.4),transparent_60%)]" />
+          <div className="absolute w-5 h-5 rounded-full bg-cyan-300/40 blur-[2px] top-1 right-1.5" />
+          <div className="absolute w-6 h-6 rounded-full bg-pink-500/50 blur-[3px] bottom-1 left-1" />
+          <div className="absolute w-2 h-2 rounded-full bg-white/80 blur-[1px] top-3 left-3" />
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-white truncate">Administrator</p>
-          <p className="text-[11px] text-emerald-400 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Online
-          </p>
+
+        <div className="flex flex-col min-w-0">
+          <span className="text-white font-semibold text-[15px] leading-tight truncate">
+            Admin
+          </span>
+          <span className="text-[12px] text-[#cbd5e1] flex items-center gap-2 mt-1 font-normal">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#48bb78] shrink-0 inline-block" />
+            <span>Online</span>
+          </span>
         </div>
       </div>
 
-      {/* Nav List with Scrollbar */}
-      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4 text-xs scrollbar-thin scrollbar-thumb-gray-700">
-        {ADMIN_PANEL_NAV_SECTIONS.map((sec, secIdx) => (
-          <div key={secIdx}>
-            <p className="px-3 text-[10px] font-bold text-[#4b646f] uppercase tracking-wider mb-1">
-              {sec.heading}
-            </p>
-            <ul className="space-y-0.5">
-              {sec.items.map((item, itemIdx) => {
+      {/* 3. NAVIGATION MENU LIST (Mengalir bersama dalam satu scroll container) */}
+      <nav className="py-2 pb-12 divide-y divide-transparent shrink-0">
+        {ADMIN_PANEL_NAV_SECTIONS.map((section) => (
+          <div key={section.heading} className="mb-2">
+            {/* Section Heading (Sama persis warna & format seperti foto) */}
+            <div className="px-6 pt-5 pb-1.5 text-[11px] font-semibold text-[#7e8c9f] uppercase tracking-wider">
+              {section.heading}
+            </div>
+
+            {/* Menu Items */}
+            <div className="space-y-0.5">
+              {section.items.map((item) => {
                 const Icon = item.icon;
+                const hasSub = item.subItems && item.subItems.length > 0;
+                const isSubmenuOpen = openSubmenus[item.title] ?? false;
+                const isParentActive =
+                  hasSub &&
+                  item.subItems!.some(
+                    (sub) =>
+                      pathname === sub.href ||
+                      (sub.href === "/admin/admin-panel/blog/posts" && pathname === "/admin/admin-panel/blog")
+                  );
                 const isActive =
-                  pathname === item.href ||
-                  (item.href === "/admin/admin-panel/home" &&
-                    (pathname === "/admin/admin-panel" || pathname === "/admin/admin-panel/"));
+                  !hasSub &&
+                  (pathname === item.href ||
+                    (item.href === "/admin/admin-panel/home" &&
+                      (pathname === "/admin/admin-panel" || pathname === "/admin/admin-panel/")));
+
+                if (hasSub) {
+                  return (
+                    <div key={item.title}>
+                      <button
+                        type="button"
+                        onClick={() => toggleSubmenu(item.title)}
+                        className={`w-full relative px-6 py-2.5 text-[14px] flex items-center justify-between transition-colors group cursor-pointer ${
+                          isParentActive
+                            ? "text-white font-medium"
+                            : "text-[#95a2b5] hover:text-white"
+                        }`}
+                      >
+                        {isParentActive && (
+                          <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#007bff]" />
+                        )}
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <Icon
+                            className={`w-[17px] h-[17px] shrink-0 transition-colors ${
+                              isParentActive
+                                ? "text-white"
+                                : "text-[#95a2b5] group-hover:text-white"
+                            }`}
+                          />
+                          <span className="truncate">{item.title}</span>
+                        </div>
+                        {isSubmenuOpen ? (
+                          <ChevronDown className="w-3.5 h-3.5 text-white transition-colors shrink-0" />
+                        ) : (
+                          <ChevronLeft className="w-3.5 h-3.5 text-[#7e8c9f] group-hover:text-white transition-colors shrink-0" />
+                        )}
+                      </button>
+
+                      {isSubmenuOpen && (
+                        <div className="bg-[#292f3a] py-1 space-y-0.5">
+                          {item.subItems!.map((sub) => {
+                            const isSubActive =
+                              pathname === sub.href ||
+                              (sub.href === "/admin/admin-panel/blog/posts" &&
+                                pathname === "/admin/admin-panel/blog");
+                            return (
+                              <Link
+                                key={sub.title}
+                                href={sub.href}
+                                onClick={() => {
+                                  if (window.innerWidth < 1024 && onClose) {
+                                    onClose();
+                                  }
+                                }}
+                                className={`block pl-14 pr-6 py-2 text-[13.5px] transition-colors ${
+                                  isSubActive
+                                    ? "text-white font-medium"
+                                    : "text-[#95a2b5] hover:text-white"
+                                }`}
+                              >
+                                {sub.title}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
 
                 return (
-                  <li key={itemIdx}>
-                    <Link
-                      href={item.href}
-                      onClick={onClose}
-                      className={`flex items-center justify-between px-3 py-2 rounded-xs transition-colors ${
-                        isActive
-                          ? "bg-[#1e282c] text-white font-semibold border-l-3 border-[#00a99d]"
-                          : "hover:bg-[#1e282c] hover:text-white"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Icon className={`w-4 h-4 ${isActive ? "text-[#00a99d]" : "text-gray-400"}`} />
-                        <span>{item.title}</span>
-                      </div>
-                      {item.badge && (
-                        <span className="px-1.5 py-0.5 bg-red-500 text-white rounded text-[10px] font-bold">
-                          {item.badge}
-                        </span>
-                      )}
-                    </Link>
-                  </li>
+                  <Link
+                    key={item.title}
+                    href={item.href}
+                    onClick={() => {
+                      if (window.innerWidth < 1024 && onClose) {
+                        onClose();
+                      }
+                    }}
+                    className={`px-6 py-2.5 text-[14px] flex items-center justify-between transition-colors group ${
+                      isActive
+                        ? "text-white font-medium"
+                        : "text-[#95a2b5] hover:text-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <Icon
+                        className={`w-[17px] h-[17px] shrink-0 transition-colors ${
+                          isActive
+                            ? "text-white"
+                            : "text-[#95a2b5] group-hover:text-white"
+                        }`}
+                      />
+                      <span className="truncate">{item.title}</span>
+                    </div>
+
+                    {item.hasSubmenu && (
+                      <ChevronLeft className="w-3.5 h-3.5 text-[#7e8c9f] group-hover:text-white transition-colors shrink-0" />
+                    )}
+                  </Link>
                 );
               })}
-            </ul>
+            </div>
           </div>
         ))}
       </nav>
-
-      {/* Footer Return Link */}
-      <div className="p-3 bg-[#1a2226] border-t border-[#10171a] shrink-0 text-center">
-        <Link
-          href="/admin"
-          className="text-xs text-gray-300 hover:text-white inline-flex items-center gap-1 font-medium"
-        >
-          <span>← Back to Storefront</span>
-        </Link>
-      </div>
     </aside>
   );
 }
