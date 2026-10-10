@@ -1,8 +1,4 @@
-"use client";
-
-import React, { useState } from "react";
-import AdminPanelSidebar from "@/components/admin/AdminPanelSidebar";
-import AdminPanelNavbar from "@/components/admin/AdminPanelNavbar";
+import React from "react";
 
 export default function AdminPanelLayout({
   children,
@@ -59,3 +55,4 @@ export default function AdminPanelLayout({
     </div>
   );
 }
+
