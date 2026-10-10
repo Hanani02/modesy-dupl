@@ -1,60 +1,120 @@
-import React from "react";
-import { FileCode, PlusCircle, Trash2, Edit } from "lucide-react";
+"use client";
+
+import React, { useState, useMemo } from "react";
+import PagesHeader from "@/components/admin/pages/PagesHeader";
+import PagesToolbar from "@/components/admin/pages/PagesToolbar";
+import PagesTable from "@/components/admin/pages/PagesTable";
+import PagesPagination from "@/components/admin/pages/PagesPagination";
+import { INITIAL_CMS_PAGES } from "@/components/admin/pages/mockData";
+import { CMSPage } from "@/components/admin/pages/types";
 
 export default function AdminPagesPage() {
-  const pages = [
-    { id: 1, title: "About Us", slug: "about-us", location: "Quick Links (Footer)", status: "Active" },
-    { id: 2, title: "Terms & Conditions", slug: "terms-conditions", location: "Information (Footer)", status: "Active" },
-    { id: 3, title: "Privacy Policy", slug: "privacy-policy", location: "Information (Footer)", status: "Active" },
-    { id: 4, title: "Help & FAQ", slug: "help-faq", location: "Help Center", status: "Active" },
-  ];
+  const [pagesList, setPagesList] = useState<CMSPage[]>(INITIAL_CMS_PAGES);
+  const [pageSize, setPageSize] = useState<number>(15);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("All");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  // Filter pages by language and search query
+  const filteredPages = useMemo(() => {
+    return pagesList.filter((page) => {
+      const matchesLang =
+        selectedLanguage === "All" ||
+        page.language.toLowerCase() === selectedLanguage.toLowerCase();
+      const matchesSearch =
+        !searchTerm.trim() ||
+        page.title.toLowerCase().includes(searchTerm.trim().toLowerCase()) ||
+        page.location.toLowerCase().includes(searchTerm.trim().toLowerCase()) ||
+        page.id.toString().includes(searchTerm.trim());
+      return matchesLang && matchesSearch;
+    });
+  }, [pagesList, selectedLanguage, searchTerm]);
+
+  // Paginate pages
+  const paginatedPages = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredPages.slice(startIndex, startIndex + pageSize);
+  }, [filteredPages, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(filteredPages.length / pageSize) || 1;
+
+  const handleAddPage = () => {
+    const title = window.prompt("Enter Page Title:");
+    if (title && title.trim()) {
+      const newPage: CMSPage = {
+        id: pagesList.length > 0 ? Math.max(...pagesList.map((p) => p.id)) + 1 : 1,
+        title: title.trim(),
+        language: "English",
+        location: "Information",
+        isVisible: true,
+        pageType: "Custom",
+        date: new Date().toISOString().slice(0, 16).replace("T", " / "),
+      };
+      setPagesList((prev) => [newPage, ...prev]);
+    }
+  };
+
+  const handleToggleVisibility = (id: number) => {
+    setPagesList((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, isVisible: !p.isVisible } : p))
+    );
+  };
+
+  const handleEdit = (page: CMSPage) => {
+    const newTitle = window.prompt("Edit Page Title:", page.title);
+    if (newTitle && newTitle.trim()) {
+      setPagesList((prev) =>
+        prev.map((p) => (p.id === page.id ? { ...p, title: newTitle.trim() } : p))
+      );
+    }
+  };
+
+  const handleDelete = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this page?")) {
+      setPagesList((prev) => prev.filter((p) => p.id !== id));
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <FileCode className="w-5 h-5 text-[#00a99d]" /> Pages
-          </h1>
-          <p className="text-xs text-gray-500 mt-0.5">Manage custom CMS static pages, policy documents, and navigational links</p>
-        </div>
-        <button className="px-3.5 py-1.5 bg-[#00a99d] text-white text-xs font-bold rounded hover:bg-[#008f85] transition flex items-center gap-1.5 cursor-pointer">
-          <PlusCircle className="w-3.5 h-3.5" /> Add New Page
-        </button>
-      </div>
+    <div className="space-y-4 max-w-[1440px] mx-auto font-sans text-[#333]">
+      {/* 1. Header with Add Page Button */}
+      <PagesHeader onAddPage={handleAddPage} />
 
-      <div className="bg-white border border-gray-200 rounded-sm p-5 shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-gray-700">
-            <thead className="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200 uppercase">
-              <tr>
-                <th className="py-2.5 px-3">Page Title</th>
-                <th className="py-2.5 px-3">Slug</th>
-                <th className="py-2.5 px-3">Location Menu</th>
-                <th className="py-2.5 px-3">Status</th>
-                <th className="py-2.5 px-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {pages.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50/70">
-                  <td className="py-3 px-3 font-semibold text-gray-900">{p.title}</td>
-                  <td className="py-3 px-3 font-mono text-gray-500">/{p.slug}</td>
-                  <td className="py-3 px-3 text-gray-600">{p.location}</td>
-                  <td className="py-3 px-3">
-                    <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded text-[10px] font-bold">
-                      {p.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-right space-x-2">
-                    <button className="text-gray-500 hover:text-[#00a99d]"><Edit className="w-3.5 h-3.5 inline" /></button>
-                    <button className="text-gray-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5 inline" /></button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* 2. White Card Container */}
+      <div className="bg-white border border-[#d2d6de] rounded-[4px] p-5 shadow-xs">
+        {/* Toolbar */}
+        <PagesToolbar
+          pageSize={pageSize}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          }}
+          selectedLanguage={selectedLanguage}
+          onLanguageChange={(lang) => {
+            setSelectedLanguage(lang);
+            setCurrentPage(1);
+          }}
+          searchTerm={searchTerm}
+          onSearchChange={(query) => {
+            setSearchTerm(query);
+            setCurrentPage(1);
+          }}
+        />
+
+        {/* Table */}
+        <PagesTable
+          pages={paginatedPages}
+          onToggleVisibility={handleToggleVisibility}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+
+        {/* Pagination */}
+        <PagesPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </div>
   );
