@@ -135,7 +135,16 @@ export const ADMIN_PANEL_NAV_SECTIONS: NavSection[] = [
   {
     heading: "MANAGEMENT TOOLS",
     items: [
-      { title: "Help Center", href: "/admin/admin-panel/help-center", icon: HelpCircle },
+      {
+        title: "Help Center",
+        href: "/admin/admin-panel/help-center/support-tickets",
+        icon: HelpCircle,
+        hasSubmenu: true,
+        subItems: [
+          { title: "Support Tickets", href: "/admin/admin-panel/help-center/support-tickets" },
+          { title: "Knowledge Base", href: "/admin/admin-panel/help-center/knowledge-base" },
+        ],
+      },
       { title: "Cache System", href: "/admin/admin-panel/cache-system", icon: Database },
       { title: "SEO Tools", href: "/admin/admin-panel/seo-tools", icon: Search },
       { title: "Ad Spaces", href: "/admin/admin-panel/ad-spaces", icon: Tv },
@@ -168,11 +177,15 @@ export default function AdminPanelSidebar({ isOpen, onClose }: SidebarProps) {
   const [openSubmenus, setOpenSubmenus] = React.useState<Record<string, boolean>>({
     Blog: true,
     Location: true,
+    "Help Center": true,
   });
 
   React.useEffect(() => {
     if (pathname?.startsWith("/admin/admin-panel/location")) {
       setOpenSubmenus((prev) => ({ ...prev, Location: true }));
+    }
+    if (pathname?.startsWith("/admin/admin-panel/help-center")) {
+      setOpenSubmenus((prev) => ({ ...prev, "Help Center": true }));
     }
   }, [pathname]);
 
@@ -301,6 +314,8 @@ export default function AdminPanelSidebar({ isOpen, onClose }: SidebarProps) {
                             const isSubActive =
                               pathname === sub.href ||
                               pathname?.startsWith(sub.href + "/") ||
+                              (sub.href === "/admin/admin-panel/help-center/knowledge-base" &&
+                                (pathname === "/admin/admin-panel/help-center" || pathname === "/admin/admin-panel/help-center/")) ||
                               (sub.href === "/admin/admin-panel/blog/posts" &&
                                 pathname === "/admin/admin-panel/blog");
                             return (
