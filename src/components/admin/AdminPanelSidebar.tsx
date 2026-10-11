@@ -112,7 +112,17 @@ export const ADMIN_PANEL_NAV_SECTIONS: NavSection[] = [
           { title: "Categories", href: "/admin/admin-panel/blog/categories" },
         ],
       },
-      { title: "Location", href: "/admin/admin-panel/location", icon: MapPin },
+      {
+        title: "Location",
+        href: "/admin/admin-panel/location/countries",
+        icon: MapPin,
+        hasSubmenu: true,
+        subItems: [
+          { title: "Countries", href: "/admin/admin-panel/location/countries" },
+          { title: "States", href: "/admin/admin-panel/location/states" },
+          { title: "Cities", href: "/admin/admin-panel/location/cities" },
+        ],
+      },
     ],
   },
   {
@@ -157,7 +167,14 @@ export default function AdminPanelSidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [openSubmenus, setOpenSubmenus] = React.useState<Record<string, boolean>>({
     Blog: true,
+    Location: true,
   });
+
+  React.useEffect(() => {
+    if (pathname?.startsWith("/admin/admin-panel/location")) {
+      setOpenSubmenus((prev) => ({ ...prev, Location: true }));
+    }
+  }, [pathname]);
 
   const toggleSubmenu = (title: string) => {
     setOpenSubmenus((prev) => ({
@@ -237,6 +254,7 @@ export default function AdminPanelSidebar({ isOpen, onClose }: SidebarProps) {
                   item.subItems!.some(
                     (sub) =>
                       pathname === sub.href ||
+                      pathname?.startsWith(sub.href + "/") ||
                       (sub.href === "/admin/admin-panel/blog/posts" && pathname === "/admin/admin-panel/blog")
                   );
                 const isActive =
@@ -282,6 +300,7 @@ export default function AdminPanelSidebar({ isOpen, onClose }: SidebarProps) {
                           {item.subItems!.map((sub) => {
                             const isSubActive =
                               pathname === sub.href ||
+                              pathname?.startsWith(sub.href + "/") ||
                               (sub.href === "/admin/admin-panel/blog/posts" &&
                                 pathname === "/admin/admin-panel/blog");
                             return (
