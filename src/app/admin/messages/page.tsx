@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Search, Send } from "lucide-react";
+import { Search, Send, Trash2, AlertTriangle, MessageSquare } from "lucide-react";
 
 interface Message {
   id: string;
@@ -25,8 +25,101 @@ interface ChatContact {
 export default function AdminMessagesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [inputMessage, setInputMessage] = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletedToast, setDeletedToast] = useState<string | null>(null);
 
   const initialChats: ChatContact[] = [
+    {
+      id: "trendshop-summer",
+      name: "Trendshop",
+      avatar: "/images/trendshop-avatar.jpg",
+      isOnline: false,
+      product: "Summer fashion top lace",
+      lastMessageSnippet: "Summer fashion top lace",
+      time: "1 day ago",
+      messages: [
+        {
+          id: "ts-summer-m1",
+          sender: "admin",
+          text: "Price",
+          time: "1 day ago",
+        },
+      ],
+    },
+    {
+      id: "trendshop-backpack",
+      name: "Trendshop",
+      avatar: "/images/trendshop-avatar.jpg",
+      isOnline: false,
+      product: "Black fashion women backpack",
+      lastMessageSnippet: "Black fashion women backpack",
+      time: "11 days ago",
+      messages: [
+        {
+          id: "ts-bp-m1",
+          sender: "admin",
+          text: "Is the black fashion backpack made of waterproof leather?",
+          time: "11 days ago",
+        },
+        {
+          id: "ts-bp-m2",
+          sender: "other",
+          text: "Yes, it is high-grade water-resistant vegan leather.",
+          time: "11 days ago",
+        },
+      ],
+    },
+    {
+      id: "trendshop-sunhat",
+      name: "Trendshop",
+      avatar: "/images/trendshop-avatar.jpg",
+      isOnline: false,
+      product: "Sun hat for women protection cap",
+      lastMessageSnippet: "Sun hat for women protection cap",
+      time: "21 days ago",
+      messages: [
+        {
+          id: "ts-sh-m1",
+          sender: "other",
+          text: "New UV protection sun hats have arrived for summer season.",
+          time: "21 days ago",
+        },
+      ],
+    },
+    {
+      id: "trendshop-video",
+      name: "Trendshop",
+      avatar: "/images/trendshop-avatar.jpg",
+      isOnline: false,
+      product: "Videokonferenz am Donnerstag ...",
+      lastMessageSnippet: "Videokonferenz am Donnerstag ...",
+      time: "27 days ago",
+      messages: [
+        {
+          id: "ts-vid-m1",
+          sender: "other",
+          text: "Videokonferenz am Donnerstag um 14:00 Uhr bestätigt.",
+          time: "27 days ago",
+        },
+      ],
+    },
+    {
+      id: "trendshop-skirt",
+      name: "Trendshop",
+      avatar: "/images/trendshop-avatar.jpg",
+      isOnline: false,
+      product: "Black midi skirt with white flowers",
+      lastMessageSnippet: "Black midi skirt with white flowers",
+      time: "1 month ago",
+      messages: [
+        {
+          id: "ts-sk-m1",
+          sender: "admin",
+          text: "hi",
+          time: "1 month ago",
+        },
+      ],
+    },
     {
       id: "peter-jone",
       name: "Peter Jone",
@@ -37,134 +130,26 @@ export default function AdminMessagesPage() {
       time: "10 mins ago",
       messages: [
         {
-          id: "m1",
+          id: "pj-m1",
           sender: "other",
           text: "Hi, is this modern grey couch still available?",
           time: "15 mins ago",
         },
         {
-          id: "m2",
+          id: "pj-m2",
           sender: "admin",
           text: "Hello Peter! Yes, it's still available and ready for delivery.",
           time: "10 mins ago",
         },
       ],
     },
-    {
-      id: "trendshop-1",
-      name: "Trendshop",
-      avatar: "/images/trendshop-avatar.jpg",
-      isOnline: false,
-      product: "Black midi skirt with white flowers",
-      lastMessageSnippet: "Black midi skirt with white flowers",
-      time: "1 month ago",
-      messages: [
-        {
-          id: "ts-m1",
-          sender: "admin",
-          text: "hi",
-          time: "1 month ago",
-        },
-      ],
-    },
-    {
-      id: "trendshop-2",
-      name: "Trendshop",
-      avatar: "/images/trendshop-avatar.jpg",
-      isOnline: false,
-      product: "Summer fashion top lace",
-      lastMessageSnippet: "Summer fashion top lace",
-      time: "1 day ago",
-      messages: [
-        {
-          id: "ts2-m1",
-          sender: "other",
-          text: "Hello! We have restocked the Summer fashion top lace in all sizes.",
-          time: "1 day ago",
-        },
-      ],
-    },
-    {
-      id: "trendshop-3",
-      name: "Trendshop",
-      avatar: "/images/trendshop-avatar.jpg",
-      isOnline: false,
-      product: "Black fashion women backpack",
-      lastMessageSnippet: "Black fashion women backpack",
-      time: "11 days ago",
-      messages: [
-        {
-          id: "ts3-m1",
-          sender: "admin",
-          text: "Is the black fashion backpack made of waterproof leather?",
-          time: "11 days ago",
-        },
-        {
-          id: "ts3-m2",
-          sender: "other",
-          text: "Yes, it is high-grade water-resistant vegan leather.",
-          time: "11 days ago",
-        },
-      ],
-    },
-    {
-      id: "trendshop-4",
-      name: "Trendshop",
-      avatar: "/images/trendshop-avatar.jpg",
-      isOnline: false,
-      product: "Sun hat for women protection cap",
-      lastMessageSnippet: "Sun hat for women protection cap",
-      time: "21 days ago",
-      messages: [
-        {
-          id: "ts4-m1",
-          sender: "other",
-          text: "New UV protection sun hats have arrived for summer season.",
-          time: "21 days ago",
-        },
-      ],
-    },
-    {
-      id: "trendshop-5",
-      name: "Trendshop",
-      avatar: "/images/trendshop-avatar.jpg",
-      isOnline: false,
-      product: "Videokonferenz am Donnerstag ...",
-      lastMessageSnippet: "Videokonferenz am Donnerstag ...",
-      time: "27 days ago",
-      messages: [
-        {
-          id: "ts5-m1",
-          sender: "other",
-          text: "Videokonferenz am Donnerstag um 14:00 Uhr bestätigt.",
-          time: "27 days ago",
-        },
-      ],
-    },
-    {
-      id: "trendshop-6",
-      name: "Trendshop",
-      avatar: "/images/trendshop-avatar.jpg",
-      isOnline: false,
-      product: "Sun hat for women protection cap",
-      lastMessageSnippet: "Sun hat for women protection cap",
-      time: "1 month ago",
-      messages: [
-        {
-          id: "ts6-m1",
-          sender: "admin",
-          text: "Thank you for the fast shipping!",
-          time: "1 month ago",
-        },
-      ],
-    },
   ];
 
   const [chats, setChats] = useState<ChatContact[]>(initialChats);
-  const [activeChatId, setActiveChatId] = useState<string>("peter-jone");
+  const [activeChatId, setActiveChatId] = useState<string>("trendshop-summer");
 
   const activeChat =
-    chats.find((c) => c.id === activeChatId) || chats[0];
+    chats.find((c) => c.id === activeChatId) || chats[0] || null;
 
   const filteredChats = chats.filter(
     (c) =>
@@ -175,7 +160,7 @@ export default function AdminMessagesPage() {
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || !activeChat) return;
 
     const newMessage: Message = {
       id: "m-" + Date.now(),
@@ -200,7 +185,28 @@ export default function AdminMessagesPage() {
     setInputMessage("");
   };
 
-  // Nebula Admin Avatar Circle matching Modesy Admin
+  const handleDeleteContact = () => {
+    if (!activeChat) return;
+
+    const targetName = activeChat.name;
+    const remainingChats = chats.filter((c) => c.id !== activeChat.id);
+
+    setChats(remainingChats);
+    setIsDeleteModalOpen(false);
+
+    if (remainingChats.length > 0) {
+      setActiveChatId(remainingChats[0].id);
+    } else {
+      setActiveChatId("");
+    }
+
+    setDeletedToast(`Conversation with ${targetName} has been deleted.`);
+    setTimeout(() => {
+      setDeletedToast(null);
+    }, 3500);
+  };
+
+  // Reusable Nebula Admin Avatar (Pixel-perfect matching Modesy Admin photo)
   const renderAdminAvatar = (sizeClass = "w-11 h-11") => (
     <div
       className={`${sizeClass} rounded-full overflow-hidden shrink-0 shadow-xs ring-1 ring-black/10 relative flex items-center justify-center bg-slate-900`}
@@ -213,7 +219,52 @@ export default function AdminMessagesPage() {
   );
 
   return (
-    <div className="w-full py-4 sm:py-6 font-sans text-gray-800">
+    <div className="w-full py-4 sm:py-6 font-sans text-gray-800 relative">
+      {/* Toast Notification */}
+      {deletedToast && (
+        <div className="fixed top-6 right-6 z-50 bg-gray-900 text-white text-xs px-4 py-2.5 rounded shadow-lg flex items-center gap-2 animate-fade-in transition-all">
+          <Trash2 className="w-3.5 h-3.5 text-red-400" />
+          <span>{deletedToast}</span>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal (SweetAlert Modesy Style) */}
+      {isDeleteModalOpen && activeChat && (
+        <div
+          className="fixed inset-0 z-50 bg-black/45 flex items-center justify-center p-4"
+          onClick={() => setIsDeleteModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-md shadow-2xl border border-gray-100 max-w-[450px] w-full py-8 px-6 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Warning Circle Icon */}
+            <div className="w-[84px] h-[84px] rounded-full border-[3px] border-[#facea8] mx-auto flex items-center justify-center mb-6">
+              <div className="flex flex-col items-center">
+                <div className="w-[5px] h-[30px] bg-[#f8bb86] rounded-full mb-[6px]"></div>
+                <div className="w-[5px] h-[5px] bg-[#f8bb86] rounded-full"></div>
+              </div>
+            </div>
+
+            {/* Message Text */}
+            <p className="text-[15px] text-[#545454] font-normal mb-7 leading-relaxed">
+              Are you sure you want to delete this conversation?
+            </p>
+
+            {/* OK Button */}
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={handleDeleteContact}
+                className="px-7 py-2 text-[13px] font-semibold text-white bg-[#00a99d] hover:bg-[#008f85] rounded shadow-xs transition-colors cursor-pointer tracking-wide"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-[1240px] mx-auto px-4">
         {/* Breadcrumb Navigation */}
         <nav className="text-[13px] text-gray-500 mb-4 flex items-center gap-1.5 font-normal">
@@ -260,7 +311,7 @@ export default function AdminMessagesPage() {
             {/* Daftar Obrolan (Scrollable) */}
             <div className="flex-1 overflow-y-auto divide-y divide-gray-100/50">
               {filteredChats.map((chat) => {
-                const isSelected = chat.id === activeChat.id;
+                const isSelected = activeChat && chat.id === activeChat.id;
                 return (
                   <button
                     key={chat.id}
@@ -295,7 +346,7 @@ export default function AdminMessagesPage() {
               })}
 
               {filteredChats.length === 0 && (
-                <div className="p-6 text-center text-xs text-gray-400">
+                <div className="p-8 text-center text-xs text-gray-400">
                   No conversations found
                 </div>
               )}
@@ -304,108 +355,138 @@ export default function AdminMessagesPage() {
 
           {/* Kolom Kanan: Area Chat */}
           <div className="flex-1 flex flex-col bg-white min-w-0">
-            {/* Header Chat */}
-            <div className="p-4 border-b border-[#e4e7ea] flex items-center justify-between bg-white">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <img
-                  src={activeChat.avatar}
-                  alt={activeChat.name}
-                  className="w-11 h-11 rounded-full object-cover shrink-0 border border-gray-100"
-                />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-[14px] font-semibold text-gray-900 truncate">
-                      {activeChat.name}
-                    </h3>
-                    <span className="flex items-center gap-1 text-[11px] text-gray-500 font-normal">
-                      <span
-                        className={`w-2 h-2 rounded-full inline-block ${
-                          activeChat.isOnline ? "bg-emerald-500" : "bg-gray-400"
-                        }`}
-                      />
-                      {activeChat.isOnline ? "Online" : "Offline"}
-                    </span>
+            {activeChat ? (
+              <>
+                {/* Header Chat dengan Icon Sampah (Delete Contact) */}
+                <div className="p-4 border-b border-[#e4e7ea] flex items-center justify-between bg-white">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <img
+                      src={activeChat.avatar}
+                      alt={activeChat.name}
+                      className="w-11 h-11 rounded-full object-cover shrink-0 border border-gray-100"
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-[14px] font-semibold text-gray-900 truncate">
+                          {activeChat.name}
+                        </h3>
+                        <span className="flex items-center gap-1 text-[11px] text-gray-500 font-normal">
+                          <span
+                            className={`w-2 h-2 rounded-full inline-block ${
+                              activeChat.isOnline
+                                ? "bg-emerald-500"
+                                : "bg-gray-400"
+                            }`}
+                          />
+                          {activeChat.isOnline ? "Online" : "Offline"}
+                        </span>
+                      </div>
+                      {activeChat.product && (
+                        <p className="text-[12px] text-gray-600 hover:text-teal-600 transition-colors truncate cursor-pointer mt-0.5">
+                          {activeChat.product}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  {activeChat.product && (
-                    <p className="text-[12px] text-gray-600 hover:text-teal-600 transition-colors truncate cursor-pointer mt-0.5">
-                      {activeChat.product}
-                    </p>
-                  )}
+
+                  {/* Icon Sampah (Delete Contact) persis seperti di foto */}
+                  <button
+                    type="button"
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    title="Delete Conversation"
+                    aria-label="Delete Conversation"
+                    className="w-8 h-8 rounded bg-[#f4f6f8] hover:bg-red-50 text-gray-500 hover:text-red-500 flex items-center justify-center transition-colors cursor-pointer border border-transparent hover:border-red-100"
+                  >
+                    <Trash2 className="w-4 h-4 stroke-[1.75]" />
+                  </button>
                 </div>
+
+                {/* Gelembung Pesan (Chat Bubbles) */}
+                <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-white flex flex-col justify-end">
+                  {activeChat.messages.map((msg) => {
+                    if (msg.sender === "admin") {
+                      // Outgoing bubble (biru di kanan dengan avatar admin di sebelah kanan)
+                      return (
+                        <div
+                          key={msg.id}
+                          className="flex flex-col items-end gap-1 w-full"
+                        >
+                          <div className="flex items-end gap-2 max-w-[80%] sm:max-w-[70%]">
+                            <div className="bg-[#007bff] text-white text-[13px] px-3.5 py-2 rounded-lg shadow-2xs leading-relaxed break-words">
+                              {msg.text}
+                            </div>
+                            {renderAdminAvatar("w-7 h-7")}
+                          </div>
+                          <span className="text-[11px] text-gray-400 pr-9">
+                            {msg.time}
+                          </span>
+                        </div>
+                      );
+                    } else {
+                      // Incoming bubble (balon putih di kiri dengan avatar lawan bicara di sebelah kiri)
+                      return (
+                        <div
+                          key={msg.id}
+                          className="flex flex-col items-start gap-1 w-full"
+                        >
+                          <div className="flex items-end gap-2 max-w-[80%] sm:max-w-[70%]">
+                            <img
+                              src={activeChat.avatar}
+                              alt={activeChat.name}
+                              className="w-7 h-7 rounded-full object-cover shrink-0 border border-gray-100"
+                            />
+                            <div className="bg-white border border-[#e4e7ea] text-gray-800 text-[13px] px-3.5 py-2 rounded-lg shadow-2xs leading-relaxed break-words">
+                              {msg.text}
+                            </div>
+                          </div>
+                          <span className="text-[11px] text-gray-400 pl-9">
+                            {msg.time}
+                          </span>
+                        </div>
+                      );
+                    }
+                  })}
+                </div>
+
+                {/* Kotak Input Pesan dengan Ikon Send di Paling Bawah */}
+                <div className="p-4 border-t border-[#e4e7ea] bg-white">
+                  <form onSubmit={handleSendMessage} className="relative w-full">
+                    <input
+                      type="text"
+                      placeholder="Write a message..."
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      className="w-full bg-[#f8f9fa] border border-[#e4e7ea] rounded-md text-[13px] pl-4 pr-10 py-2.5 text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:bg-white transition-all"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!inputMessage.trim()}
+                      className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors cursor-pointer ${
+                        inputMessage.trim()
+                          ? "text-blue-600 hover:text-blue-700"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
+                      aria-label="Send message"
+                    >
+                      <Send className="w-4 h-4 stroke-[1.75]" />
+                    </button>
+                  </form>
+                </div>
+              </>
+            ) : (
+              /* Tampilan jika semua percakapan telah dihapus */
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-gray-400">
+                <div className="w-14 h-14 rounded-full bg-gray-50 flex items-center justify-center mb-3 text-gray-300">
+                  <MessageSquare className="w-7 h-7 stroke-[1.5]" />
+                </div>
+                <h4 className="text-sm font-semibold text-gray-600 mb-1">
+                  No Active Conversation
+                </h4>
+                <p className="text-xs text-gray-400 max-w-xs">
+                  All messages have been cleared or deleted. Direct inquiries will appear here.
+                </p>
               </div>
-            </div>
-
-            {/* Gelembung Pesan (Chat Bubbles) */}
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-white flex flex-col justify-end">
-              {activeChat.messages.map((msg) => {
-                if (msg.sender === "admin") {
-                  // Outgoing bubble (biru di kanan dengan avatar admin di sebelah kanan)
-                  return (
-                    <div
-                      key={msg.id}
-                      className="flex flex-col items-end gap-1 w-full"
-                    >
-                      <div className="flex items-end gap-2 max-w-[80%] sm:max-w-[70%]">
-                        <div className="bg-[#007bff] text-white text-[13px] px-3.5 py-2 rounded-lg shadow-2xs leading-relaxed break-words">
-                          {msg.text}
-                        </div>
-                        {renderAdminAvatar("w-7 h-7")}
-                      </div>
-                      <span className="text-[11px] text-gray-400 pr-9">
-                        {msg.time}
-                      </span>
-                    </div>
-                  );
-                } else {
-                  // Incoming bubble (balon putih di kiri dengan avatar lawan bicara di sebelah kiri)
-                  return (
-                    <div
-                      key={msg.id}
-                      className="flex flex-col items-start gap-1 w-full"
-                    >
-                      <div className="flex items-end gap-2 max-w-[80%] sm:max-w-[70%]">
-                        <img
-                          src={activeChat.avatar}
-                          alt={activeChat.name}
-                          className="w-7 h-7 rounded-full object-cover shrink-0 border border-gray-100"
-                        />
-                        <div className="bg-white border border-[#e4e7ea] text-gray-800 text-[13px] px-3.5 py-2 rounded-lg shadow-2xs leading-relaxed break-words">
-                          {msg.text}
-                        </div>
-                      </div>
-                      <span className="text-[11px] text-gray-400 pl-9">
-                        {msg.time}
-                      </span>
-                    </div>
-                  );
-                }
-              })}
-            </div>
-
-            {/* Kotak Input Pesan dengan Ikon Send di Paling Bawah */}
-            <div className="p-4 border-t border-[#e4e7ea] bg-white">
-              <form onSubmit={handleSendMessage} className="relative w-full">
-                <input
-                  type="text"
-                  placeholder="Write a message..."
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  className="w-full bg-[#f8f9fa] border border-[#e4e7ea] rounded-md text-[13px] pl-4 pr-10 py-2.5 text-gray-700 placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:bg-white transition-all"
-                />
-                <button
-                  type="submit"
-                  disabled={!inputMessage.trim()}
-                  className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors cursor-pointer ${
-                    inputMessage.trim()
-                      ? "text-blue-600 hover:text-blue-700"
-                      : "text-gray-400 hover:text-gray-600"
-                  }`}
-                  aria-label="Send message"
-                >
-                  <Send className="w-4 h-4 stroke-[1.75]" />
-                </button>
-              </form>
-            </div>
+            )}
           </div>
         </div>
       </div>
