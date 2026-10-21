@@ -28,7 +28,7 @@ export default function AdminPanelLayout({
       !user ||
       (user.role !== "admin" && user.role !== "moderator")
     ) {
-      router.replace("/admin/login");
+      router.replace("/guest");
     }
   }, [user, isInitialized, router]);
 

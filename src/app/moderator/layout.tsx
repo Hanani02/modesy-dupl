@@ -28,7 +28,7 @@ export default function ModeratorLayout({
     const isAllowed = user && (user.role === "moderator" || user.role === "admin");
 
     if (isExplicitLogout || !isAllowed) {
-      router.replace("/admin/login");
+      router.replace("/guest");
     }
   }, [user, isInitialized, router]);
 

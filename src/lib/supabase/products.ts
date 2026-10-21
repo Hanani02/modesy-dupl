@@ -1,9 +1,15 @@
 import { supabase, isSupabaseConfigured } from "./client";
 import { DbProduct, DbProductImage } from "./types";
 
+export const CUSTOM_PRODUCTS_STORAGE_KEY = "modesy_custom_products";
+export const PRODUCTS_CHANGE_EVENT = "modesy_products_change";
+
 export interface CreateProductInput {
   vendor_id?: string;
   category_id?: string | null;
+  category_name?: string;
+  category_slug?: string;
+  seller_name?: string;
   brand_id?: string | null;
   title: string;
   slug?: string;
@@ -38,7 +44,57 @@ export function generateSlug(title: string): string {
 }
 
 /**
- * Fetch all products from Supabase with optional filters
+ * LocalStorage helper to get custom products
+ */
+export function getCustomProducts(): DbProduct[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(CUSTOM_PRODUCTS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error("Failed to parse custom products", e);
+    return [];
+  }
+}
+
+/**
+ * LocalStorage helper to save/update a custom product
+ */
+export function saveCustomProduct(product: DbProduct): void {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = getCustomProducts();
+    const idx = existing.findIndex((p) => p.id === product.id || p.slug === product.slug);
+    if (idx >= 0) {
+      existing[idx] = product;
+    } else {
+      existing.unshift(product);
+    }
+    localStorage.setItem(CUSTOM_PRODUCTS_STORAGE_KEY, JSON.stringify(existing));
+    window.dispatchEvent(new CustomEvent(PRODUCTS_CHANGE_EVENT, { detail: product }));
+  } catch (e) {
+    console.error("Failed to save custom product", e);
+  }
+}
+
+/**
+ * LocalStorage helper to delete a custom product
+ */
+export function deleteCustomProduct(idOrSlug: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const existing = getCustomProducts();
+    const filtered = existing.filter((p) => p.id !== idOrSlug && p.slug !== idOrSlug);
+    localStorage.setItem(CUSTOM_PRODUCTS_STORAGE_KEY, JSON.stringify(filtered));
+    window.dispatchEvent(new CustomEvent(PRODUCTS_CHANGE_EVENT, { detail: { id: idOrSlug, deleted: true } }));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Fetch all products (merging custom products with Supabase products)
  */
 export async function getProducts(options?: {
   status?: string;
@@ -52,8 +108,35 @@ export async function getProducts(options?: {
   limit?: number;
   offset?: number;
 }) {
+  // 1. Filter custom products from localStorage
+  const customItems = getCustomProducts();
+  let filteredCustom = customItems.filter((p) => {
+    if (options?.status && p.status !== options.status) return false;
+    if (options?.isFeatured !== undefined && p.is_featured !== options.isFeatured) return false;
+    if (options?.isPromoted !== undefined && p.is_promoted !== options.isPromoted) return false;
+    if (options?.isSpecialOffer !== undefined && p.is_special_offer !== options.isSpecialOffer) return false;
+    if (options?.vendorId && p.vendor_id !== options.vendorId) return false;
+    if (options?.categorySlug) {
+      const pCatSlug = p.categories?.slug || "";
+      const pCatName = (p.categories?.name || "").toLowerCase();
+      const targetSlug = options.categorySlug.toLowerCase();
+      if (!pCatSlug.includes(targetSlug) && !targetSlug.includes(pCatSlug) && !pCatName.includes(targetSlug)) {
+        return false;
+      }
+    }
+    if (options?.search) {
+      const q = options.search.toLowerCase();
+      if (!p.title.toLowerCase().includes(q) && !(p.description || "").toLowerCase().includes(q) && !(p.sku || "").toLowerCase().includes(q)) {
+        return false;
+      }
+    }
+    return true;
+  });
+
   if (!isSupabaseConfigured()) {
-    return { data: null, error: new Error("Supabase is not configured yet") };
+    const limit = options?.limit || 20;
+    const offset = options?.offset || 0;
+    return { data: filteredCustom.slice(offset, offset + limit), error: null };
   }
 
   try {
@@ -94,7 +177,6 @@ export async function getProducts(options?: {
           .select("id")
           .eq("parent_id", cat.id);
 
-        // Also fetch grandchildren if any
         let grandChildIds: string[] = [];
         if (childCats && childCats.length > 0) {
           const childIds = childCats.map((c) => c.id);
@@ -115,17 +197,29 @@ export async function getProducts(options?: {
     if (options?.search) {
       query = query.ilike("title", `%${options.search}%`);
     }
-    if (options?.limit) {
-      query = query.limit(options.limit);
-    }
-    if (options?.offset) {
-      query = query.range(options.offset, options.offset + (options.limit || 10) - 1);
+
+    const { data: dbProducts, error } = await query;
+    const listFromDb = (dbProducts || []) as DbProduct[];
+
+    // Merge: custom items first, then DB items (deduplicated by slug or ID)
+    const combined: DbProduct[] = [...filteredCustom];
+    const seenIds = new Set(filteredCustom.map((p) => p.id));
+    const seenSlugs = new Set(filteredCustom.map((p) => p.slug));
+
+    for (const item of listFromDb) {
+      if (!seenIds.has(item.id) && !seenSlugs.has(item.slug)) {
+        combined.push(item);
+        seenIds.add(item.id);
+        seenSlugs.add(item.slug);
+      }
     }
 
-    const { data, error } = await query;
-    return { data: data as DbProduct[] | null, error };
+    const limit = options?.limit || combined.length;
+    const offset = options?.offset || 0;
+    return { data: combined.slice(offset, offset + limit), error: null };
   } catch (err) {
-    return { data: null, error: err as Error };
+    console.error("Error in getProducts:", err);
+    return { data: filteredCustom, error: err as Error };
   }
 }
 
@@ -133,6 +227,19 @@ export async function getProducts(options?: {
  * Fetch single product by slug or ID
  */
 export async function getProductBySlugOrId(identifier: string) {
+  // 1. First check in custom products from localStorage
+  const customItems = getCustomProducts();
+  const lowerId = identifier.toLowerCase().trim();
+  const foundCustom = customItems.find(
+    (p) =>
+      p.id === identifier ||
+      p.slug.toLowerCase() === lowerId ||
+      p.slug.toLowerCase().endsWith(`-${lowerId}`)
+  );
+  if (foundCustom) {
+    return { data: foundCustom, error: null };
+  }
+
   if (!isSupabaseConfigured()) {
     return { data: null, error: new Error("Supabase is not configured yet") };
   }
@@ -165,132 +272,208 @@ export async function getProductBySlugOrId(identifier: string) {
 }
 
 /**
- * Create a new product in Supabase (INSERT)
+ * Create a new product in Supabase & LocalStorage
  */
 export async function createProduct(input: CreateProductInput) {
-  if (!isSupabaseConfigured()) {
-    return { data: null, error: new Error("Supabase is not configured. Please add your credentials to .env.local") };
-  }
-
   try {
     // 1. Resolve vendor_id
     let vendorId = input.vendor_id;
-    if (!vendorId) {
-      const { data: authData } = await supabase.auth.getUser();
-      vendorId = authData.user?.id;
+    let sellerName = input.seller_name || "Trendshop";
+
+    if (typeof window !== "undefined") {
+      try {
+        const storedUser = localStorage.getItem("modesy_auth_user");
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          if (parsed?.id) vendorId = parsed.id;
+          if (parsed?.name) sellerName = parsed.name;
+        }
+      } catch {}
     }
 
-    // Fallback demo vendor ID if unauthenticated in dev
     if (!vendorId) {
       vendorId = "00000000-0000-0000-0000-000000000002";
     }
 
     const slug = input.slug || generateSlug(input.title);
+    const newId = `prod-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-    // 2. Insert into products table
-    const { data: newProduct, error: productError } = await supabase
-      .from("products")
-      .insert({
-        vendor_id: vendorId,
-        category_id: input.category_id || null,
-        brand_id: input.brand_id || null,
-        title: input.title,
-        slug,
-        sku: input.sku || null,
-        short_description: input.short_description || null,
-        description: input.description || null,
-        product_type: input.product_type || "physical",
-        listing_type: input.listing_type || "sell_on_site",
-        price: input.price,
-        discount_rate: input.discount_rate || 0,
-        stock: input.stock ?? 10,
-        is_featured: input.is_featured || false,
-        is_promoted: input.is_promoted || false,
-        is_special_offer: input.is_special_offer || false,
-        status: input.status || "active",
-      })
-      .select()
-      .single();
+    const imageList = (input.images && input.images.length > 0)
+      ? input.images
+      : ["/images/products/midi-skirt.webp"];
 
-    if (productError || !newProduct) {
-      return { data: null, error: productError };
-    }
+    const catName = input.category_name || "General";
+    const catSlug = input.category_slug || generateSlug(catName);
 
-    // 3. Insert images if provided
-    if (input.images && input.images.length > 0) {
-      const imageRows = input.images.map((imgUrl, idx) => ({
-        product_id: newProduct.id,
+    // Build the full DbProduct record
+    const newProductRecord: DbProduct = {
+      id: newId,
+      vendor_id: vendorId,
+      category_id: input.category_id || null,
+      brand_id: input.brand_id || null,
+      title: input.title,
+      slug,
+      sku: input.sku || `SKU-${Date.now().toString().slice(-6)}`,
+      short_description: input.short_description || null,
+      description: input.description || null,
+      product_type: input.product_type || "physical",
+      listing_type: input.listing_type || "sell_on_site",
+      price: input.price,
+      discount_rate: input.discount_rate || 0,
+      stock: input.stock ?? 10,
+      is_featured: input.is_featured || false,
+      is_promoted: input.is_promoted || false,
+      is_special_offer: input.is_special_offer || false,
+      views_count: 0,
+      rating_avg: 5,
+      review_count: 0,
+      external_link: null,
+      status: input.status || "active",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      product_images: imageList.map((imgUrl, idx) => ({
+        id: `img-${Date.now()}-${idx}`,
+        product_id: newId,
         image_url: imgUrl,
         is_primary: idx === 0,
         order_index: idx + 1,
-      }));
+      })),
+      categories: {
+        name: catName,
+        slug: catSlug,
+      },
+      profiles: {
+        username: sellerName,
+        first_name: "",
+        last_name: "",
+        email: "vendor@gmail.com",
+      },
+    };
 
-      await supabase.from("product_images").insert(imageRows);
+    // 2. Attempt insert into Supabase if configured
+    if (isSupabaseConfigured()) {
+      try {
+        const { data: dbData, error: dbErr } = await supabase
+          .from("products")
+          .insert({
+            vendor_id: vendorId,
+            category_id: input.category_id || null,
+            brand_id: input.brand_id || null,
+            title: input.title,
+            slug,
+            sku: newProductRecord.sku,
+            short_description: input.short_description || null,
+            description: input.description || null,
+            product_type: input.product_type || "physical",
+            listing_type: input.listing_type || "sell_on_site",
+            price: input.price,
+            discount_rate: input.discount_rate || 0,
+            stock: input.stock ?? 10,
+            is_featured: input.is_featured || false,
+            is_promoted: input.is_promoted || false,
+            is_special_offer: input.is_special_offer || false,
+            status: input.status || "active",
+          })
+          .select()
+          .single();
+
+        if (!dbErr && dbData) {
+          newProductRecord.id = dbData.id;
+          if (imageList.length > 0) {
+            const imageRows = imageList.map((imgUrl, idx) => ({
+              product_id: dbData.id,
+              image_url: imgUrl,
+              is_primary: idx === 0,
+              order_index: idx + 1,
+            }));
+            await supabase.from("product_images").insert(imageRows);
+          }
+        } else if (dbErr) {
+          console.warn("Supabase insert notice (using local storage fallback):", dbErr.message);
+        }
+      } catch (sbErr) {
+        console.warn("Supabase insert exception (using local storage fallback):", sbErr);
+      }
     }
 
-    return { data: newProduct as DbProduct, error: null };
+    // 3. Save to localStorage & notify
+    saveCustomProduct(newProductRecord);
+
+    return { data: newProductRecord, error: null };
   } catch (err) {
+    console.error("Failed to create product:", err);
     return { data: null, error: err as Error };
   }
 }
 
 /**
- * Update an existing product in Supabase (UPDATE)
+ * Update an existing product
  */
 export async function updateProduct(input: UpdateProductInput) {
-  if (!isSupabaseConfigured()) {
-    return { data: null, error: new Error("Supabase is not configured yet") };
-  }
-
   try {
     const { id, images, ...updateFields } = input;
 
-    const { data: updatedProduct, error: updateError } = await supabase
-      .from("products")
-      .update(updateFields)
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (updateError) {
-      return { data: null, error: updateError };
+    // 1. Update in custom products
+    const customItems = getCustomProducts();
+    const existingIdx = customItems.findIndex((p) => p.id === id || p.slug === id);
+    if (existingIdx >= 0) {
+      const updated = {
+        ...customItems[existingIdx],
+        ...updateFields,
+        updated_at: new Date().toISOString(),
+      };
+      if (images && images.length > 0) {
+        updated.product_images = images.map((imgUrl, idx) => ({
+          id: `img-${Date.now()}-${idx}`,
+          product_id: id,
+          image_url: imgUrl,
+          is_primary: idx === 0,
+          order_index: idx + 1,
+        }));
+      }
+      saveCustomProduct(updated);
     }
 
-    // If new images provided, sync product_images
-    if (images && images.length > 0) {
-      await supabase.from("product_images").delete().eq("product_id", id);
-
-      const imageRows = images.map((imgUrl, idx) => ({
-        product_id: id,
-        image_url: imgUrl,
-        is_primary: idx === 0,
-        order_index: idx + 1,
-      }));
-
-      await supabase.from("product_images").insert(imageRows);
+    // 2. Update in Supabase if configured
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from("products").update(updateFields).eq("id", id);
+        if (images && images.length > 0) {
+          await supabase.from("product_images").delete().eq("product_id", id);
+          const imageRows = images.map((imgUrl, idx) => ({
+            product_id: id,
+            image_url: imgUrl,
+            is_primary: idx === 0,
+            order_index: idx + 1,
+          }));
+          await supabase.from("product_images").insert(imageRows);
+        }
+      } catch (e) {
+        console.warn("Supabase update notice:", e);
+      }
     }
 
-    return { data: updatedProduct as DbProduct, error: null };
+    return { data: customItems[existingIdx] || null, error: null };
   } catch (err) {
     return { data: null, error: err as Error };
   }
 }
 
 /**
- * Delete a product from Supabase (DELETE)
+ * Delete a product
  */
 export async function deleteProduct(productId: string) {
-  if (!isSupabaseConfigured()) {
-    return { success: false, error: new Error("Supabase is not configured yet") };
+  // 1. Delete from custom products
+  deleteCustomProduct(productId);
+
+  // 2. Delete from Supabase if configured
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from("products").delete().eq("id", productId);
+    } catch (e) {
+      console.warn("Supabase delete notice:", e);
+    }
   }
 
-  try {
-    const { error } = await supabase.from("products").delete().eq("id", productId);
-    if (error) {
-      return { success: false, error };
-    }
-    return { success: true, error: null };
-  } catch (err) {
-    return { success: false, error: err as Error };
-  }
+  return { success: true, error: null };
 }

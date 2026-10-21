@@ -25,7 +25,7 @@ interface DashboardNavbarProps {
 
 export default function DashboardNavbar({ onToggleSidebar }: DashboardNavbarProps) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("English");
@@ -208,6 +208,25 @@ export default function DashboardNavbar({ onToggleSidebar }: DashboardNavbarProp
             <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-gray-200 rounded-[3px] shadow-lg z-50 py-2">
               {visibleMenus.map((item) => {
                 const Icon = item.icon;
+                if (item.title === "Logout") {
+                  return (
+                    <button
+                      key={item.title}
+                      type="button"
+                      onClick={() => {
+                        setProfileDropdownOpen(false);
+                        logout();
+                      }}
+                      className="w-full text-left flex items-center gap-3 px-4 py-2 text-[14px] text-gray-700 hover:text-[#00a99d] hover:bg-gray-50/80 transition-colors font-normal group cursor-pointer border-0 bg-transparent"
+                    >
+                      <Icon
+                        className="w-[18px] h-[18px] text-gray-500 group-hover:text-[#00a99d] transition-colors shrink-0"
+                        strokeWidth={1.75}
+                      />
+                      <span className="truncate">{item.title}</span>
+                    </button>
+                  );
+                }
                 return (
                   <Link
                     key={item.title}

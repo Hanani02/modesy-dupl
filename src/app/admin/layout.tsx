@@ -28,7 +28,7 @@ export default function AdminLayout({
       user && (user.role === "admin" || (isAdminPanel && user.role === "moderator"));
 
     if (isExplicitLogout || !isAllowed) {
-      router.replace("/admin/login");
+      router.replace("/guest");
     }
   }, [user, isInitialized, isAdminPanel, router]);
 

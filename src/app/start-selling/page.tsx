@@ -10,12 +10,8 @@ export default function StartSellingRedirectPage() {
 
   useEffect(() => {
     if (!isInitialized) return;
-    if (user?.role === "vendor") {
-      router.replace("/vendor");
-    } else if (user?.role === "member") {
-      router.replace("/member/start-selling");
-    } else if (user?.role === "admin") {
-      router.replace("/admin/dashboard");
+    if (user) {
+      router.replace("/dashboard/add-product");
     } else {
       router.replace("/guest/start-selling");
     }

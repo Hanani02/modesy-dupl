@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Check,
   Plus,
@@ -29,7 +30,11 @@ import CategorySelector from "@/components/admin/dashboard/add-product/CategoryS
 import ProductDetailsEnglish, {
   EnglishDetailsData,
 } from "@/components/admin/dashboard/add-product/ProductDetailsEnglish";
+import ProductDetailsArabic, {
+  ArabicDetailsData,
+} from "@/components/admin/dashboard/add-product/ProductDetailsArabic";
 import { createProduct } from "@/lib/supabase/products";
+import { useAuth } from "@/context/AuthContext";
 
 interface ProductVariation {
   id: string;
@@ -37,7 +42,17 @@ interface ProductVariation {
   options: string;
 }
 
-export default function VendorAddProductView() {
+interface VendorAddProductViewProps {
+  isAdmin?: boolean;
+  isModerator?: boolean;
+}
+
+export default function VendorAddProductView({
+  isAdmin = false,
+  isModerator = false,
+}: VendorAddProductViewProps = {}) {
+  const router = useRouter();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [images, setImages] = useState<UploadedImage[]>([]);
 
@@ -47,6 +62,13 @@ export default function VendorAddProductView() {
   const [category, setCategory] = useState("");
 
   const [englishDetails, setEnglishDetails] = useState<EnglishDetailsData>({
+    title: "",
+    shortDescription: "",
+    tags: [],
+    description: "",
+  });
+
+  const [arabicDetails, setArabicDetails] = useState<ArabicDetailsData>({
     title: "",
     shortDescription: "",
     tags: [],
@@ -72,6 +94,7 @@ export default function VendorAddProductView() {
 
   // Success state & Loading
   const [isPublished, setIsPublished] = useState<boolean>(false);
+  const [publishedProduct, setPublishedProduct] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const handleSaveAndContinue = (e: React.FormEvent) => {
@@ -128,7 +151,7 @@ export default function VendorAddProductView() {
 
       const imageUrls = images.map((img) => img.url).filter(Boolean);
 
-      await createProduct({
+      const created = await createProduct({
         title: englishDetails.title,
         short_description: englishDetails.shortDescription,
         description: englishDetails.description,
@@ -140,8 +163,14 @@ export default function VendorAddProductView() {
         stock: isUnlimitedStock ? 9999 : parseInt(stock, 10) || 10,
         images: imageUrls.length > 0 ? imageUrls : ["/images/products/midi-skirt.webp"],
         status: "active",
+        category_name: category,
+        vendor_id: user?.id,
+        seller_name: user?.name || (isAdmin ? "Admin" : "Trendshop"),
       });
 
+      if (created.data) {
+        setPublishedProduct(created.data);
+      }
       setIsPublished(true);
     } catch (err) {
       console.error("Failed to add product:", err);
@@ -149,6 +178,32 @@ export default function VendorAddProductView() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSaveDraft = async () => {
+    if (!englishDetails.title.trim()) {
+      alert("Please enter at least a product title to save as draft.");
+      return;
+    }
+    const numericPrice = parseFloat(price.replace(/[^0-9.]/g, "")) || 0;
+    const imageUrls = images.map((img) => img.url).filter(Boolean);
+    await createProduct({
+      title: englishDetails.title,
+      short_description: englishDetails.shortDescription,
+      description: englishDetails.description,
+      product_type: (productType?.toLowerCase() as any) || "physical",
+      listing_type: listingType === "ordinary_listing" ? "ordinary_listing" : "sell_on_site",
+      price: numericPrice,
+      sku: sku || undefined,
+      stock: isUnlimitedStock ? 9999 : parseInt(stock, 10) || 10,
+      images: imageUrls.length > 0 ? imageUrls : ["/images/products/midi-skirt.webp"],
+      status: "draft",
+      category_name: category,
+      vendor_id: user?.id,
+      seller_name: user?.name || (isAdmin ? "Admin" : "Trendshop"),
+    });
+    alert("Product saved as draft in your inventory!");
+    router.push(isAdmin ? "/admin/dashboard/products" : "/dashboard/products");
   };
 
   const addVariation = () => {
@@ -232,7 +287,13 @@ export default function VendorAddProductView() {
               showTitleError={errorField === "title"}
             />
 
-            {/* 6. Save and Continue Button (Bottom Right) */}
+            {/* 6. Details: Arabic Accordion */}
+            <ProductDetailsArabic
+              data={arabicDetails}
+              onChange={(d) => setArabicDetails(d)}
+            />
+
+            {/* 7. Save and Continue Button (Bottom Right) */}
             <div className="flex justify-end pt-4 border-t border-[#f4f4f4]">
               <button
                 type="submit"
@@ -547,20 +608,22 @@ export default function VendorAddProductView() {
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    alert("Product saved as draft in your inventory!");
-                    window.location.href = "/vendor/dashboard";
-                  }}
+                  onClick={handleSaveDraft}
                   className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-[3px] transition cursor-pointer"
                 >
                   Save as Draft
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-[#00a99d] hover:bg-[#008f85] text-white text-xs font-bold rounded-[3px] transition shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                  disabled={isSubmitting}
+                  className="px-6 py-2.5 bg-[#00a99d] hover:bg-[#008f85] text-white text-xs font-bold rounded-[3px] transition shadow-xs cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
                 >
-                  <Check className="w-4 h-4 stroke-[2.5]" />
-                  <span>Publish Product</span>
+                  {isSubmitting ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4 stroke-[2.5]" />
+                  )}
+                  <span>{isSubmitting ? "Publishing..." : "Publish Product"}</span>
                 </button>
               </div>
             </div>
@@ -603,12 +666,22 @@ export default function VendorAddProductView() {
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-3 pt-2">
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              {publishedProduct?.slug && (
+                <Link
+                  href={`/${publishedProduct.slug}`}
+                  target="_blank"
+                  className="px-4 py-2 bg-[#00a99d] hover:bg-[#008f85] text-white text-xs font-bold rounded-[3px] transition inline-flex items-center gap-1.5 shadow-xs"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>View Product</span>
+                </Link>
+              )}
               <Link
-                href="/vendor/dashboard"
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded transition"
+                href={isAdmin ? "/admin/dashboard/products" : "/dashboard/products"}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-[3px] transition"
               >
-                Go to Dashboard
+                Go to Products
               </Link>
               <button
                 type="button"
@@ -621,10 +694,22 @@ export default function VendorAddProductView() {
                     tags: [],
                     description: "",
                   });
+                  setArabicDetails({
+                    title: "",
+                    shortDescription: "",
+                    tags: [],
+                    description: "",
+                  });
                   setPrice("");
+                  setDiscountPrice("");
+                  setSku("");
                   setImages([]);
+                  setProductType(null);
+                  setListingType(null);
+                  setCategory("");
+                  setPublishedProduct(null);
                 }}
-                className="px-5 py-2 bg-[#00a99d] hover:bg-[#008f85] text-white text-xs font-bold rounded transition inline-flex items-center gap-1.5"
+                className="px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-[3px] transition inline-flex items-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Another</span>

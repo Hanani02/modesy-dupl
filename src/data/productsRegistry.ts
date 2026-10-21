@@ -1888,12 +1888,85 @@ export function getProductByIdOrSlug(idOrSlug: string | number): DetailedProduct
       lowerStr.includes(a.title.toLowerCase()) ||
       a.title.toLowerCase().includes(lowerStr)
   );
-  if (fromAllBySlug) {
-    const built = buildDetailedProductFromGeneric(fromAllBySlug);
-    DETAILED_PRODUCTS[fromAllBySlug.id] = built;
-    return built;
+  // Check custom products from localStorage
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("modesy_custom_products");
+      if (raw) {
+        const customItems = JSON.parse(raw);
+        const found = customItems.find((c: any) =>
+          String(c.id) === str ||
+          c.slug?.toLowerCase() === lowerStr ||
+          c.title?.toLowerCase() === lowerStr ||
+          (match && c.slug?.endsWith(`-${match[1]}`))
+        );
+        if (found) {
+          const built = registerCustomProduct(found);
+          return built;
+        }
+      }
+    } catch {}
   }
 
   // Final fallback to 41 if absolutely no product can be found anywhere
   return DETAILED_PRODUCTS[41];
+}
+
+export function registerCustomProduct(dbProduct: any): DetailedProduct {
+  const primaryImg =
+    dbProduct.product_images?.find((img: any) => img.is_primary)?.image_url ||
+    dbProduct.product_images?.[0]?.image_url ||
+    (Array.isArray(dbProduct.images) ? dbProduct.images[0] : null) ||
+    dbProduct.image ||
+    "/images/products/midi-skirt.webp";
+  const allImgs =
+    dbProduct.product_images?.map((img: any) => img.image_url) ||
+    (Array.isArray(dbProduct.images) ? dbProduct.images : [primaryImg]);
+
+  const numericPrice = typeof dbProduct.price === "number" ? dbProduct.price : parseFloat(String(dbProduct.price).replace(/[^0-9.]/g, "")) || 0;
+  const catName = dbProduct.categories?.name || dbProduct.category || "General";
+  const seller = dbProduct.profiles?.username || dbProduct.seller || "Trendshop";
+
+  const detailed: DetailedProduct = {
+    id: dbProduct.id,
+    slug: dbProduct.slug || `${(dbProduct.title || "product").toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${dbProduct.id}`,
+    title: dbProduct.title,
+    seller,
+    sellerSlug: seller.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    image: primaryImg,
+    secondaryImage: allImgs[1] || primaryImg,
+    images: allImgs,
+    price: `$${numericPrice.toFixed(2)}`,
+    originalPrice: dbProduct.discount_rate > 0 ? `$${(numericPrice / (1 - dbProduct.discount_rate / 100)).toFixed(2)}` : undefined,
+    discountPercent: dbProduct.discount_rate > 0 ? `${dbProduct.discount_rate}%` : undefined,
+    status: (dbProduct.stock ?? 1) > 0 ? "In Stock" : "Out of Stock",
+    sku: dbProduct.sku || `SKU-${dbProduct.id}`,
+    baseSku: dbProduct.sku || `SKU-${dbProduct.id}`,
+    category: catName,
+    subCategory: catName,
+    rootCategory: catName.split(" > ")[0] || catName,
+    breadcrumb: [
+      { label: "Home", href: "/" },
+      { label: catName, href: `/category/${catName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}` },
+      { label: dbProduct.title, href: "#" },
+    ],
+    brand: seller,
+    rating: dbProduct.rating_avg || 5,
+    reviewsCount: dbProduct.review_count || 0,
+    viewsCount: dbProduct.views_count || 120,
+    commentsCount: 0,
+    favoritesCount: 0,
+    readyToShip: "Ready to ship in 1-3 Business Days",
+    location: "Berlin, Germany",
+    mapQuery: "Berlin, Germany",
+    description: dbProduct.description || dbProduct.short_description || `${dbProduct.title}. Crafted with high quality materials.`,
+    reviews: [],
+    comments: [],
+  };
+
+  DETAILED_PRODUCTS[dbProduct.id] = detailed;
+  if (dbProduct.slug) {
+    DETAILED_PRODUCTS[dbProduct.slug] = detailed;
+  }
+  return detailed;
 }

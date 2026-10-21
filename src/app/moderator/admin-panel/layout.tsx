@@ -23,9 +23,10 @@ export default function ModeratorPanelLayout({
       sessionStorage.getItem("modesy_explicit_logout") === "true";
     if (
       isExplicitLogout ||
-      (user && user.role !== "moderator" && user.role !== "admin")
+      !user ||
+      (user.role !== "moderator" && user.role !== "admin")
     ) {
-      router.push("/admin/login");
+      router.replace("/guest");
     }
   }, [user, router]);
 

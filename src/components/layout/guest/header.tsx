@@ -466,13 +466,33 @@ export default function Header({
                       effectiveUser?.avatar ||
                       (isVendor
                         ? "/assets/img/trendshop-avatar.jpg"
+                        : effectiveUser?.role === "member"
+                        ? "/images/peter-jone-avatar.jpg"
+                        : effectiveUser?.role === "moderator"
+                        ? "/assets/img/roger-avatar.jpg"
                         : "/assets/img/admin-avatar.jpg")
                     }
-                    alt={effectiveUser?.name || (isVendor ? "Trendshop" : "Admin")}
+                    alt={
+                      effectiveUser?.name ||
+                      (isVendor
+                        ? "Trendshop"
+                        : effectiveUser?.role === "member"
+                        ? "Member"
+                        : effectiveUser?.role === "moderator"
+                        ? "Moderator"
+                        : "Admin")
+                    }
                     className="w-[26px] h-[26px] rounded-full object-cover shrink-0 ring-1 ring-black/10"
                   />
                   <span className="font-medium text-[14px] text-[#333]">
-                    {effectiveUser?.name || (isVendor ? "Trendshop" : "Admin")}
+                    {effectiveUser?.name ||
+                      (isVendor
+                        ? "Trendshop"
+                        : effectiveUser?.role === "member"
+                        ? "Member"
+                        : effectiveUser?.role === "moderator"
+                        ? "Moderator"
+                        : "Admin")}
                   </span>
                   <svg
                     width="10"
@@ -503,10 +523,10 @@ export default function Header({
                           <button
                             key={item.title}
                             type="button"
-                            onClick={() => {
+                            onClick={async () => {
                               setAdminDropdownOpen(false);
                               if (onLogout) onLogout();
-                              logout();
+                              await logout();
                             }}
                             className="w-full text-left flex items-center gap-3 px-4 py-2 text-[14px] text-gray-700 hover:text-[#00a99d] hover:bg-gray-50/80 transition-colors font-normal group cursor-pointer border-0 bg-transparent"
                           >
@@ -677,7 +697,7 @@ export default function Header({
             {/* Sell Now Button */}
             {effectiveIsLoggedIn ? (
               <Link
-                href={isVendor ? "/vendor/dashboard" : "/admin/dashboard"}
+                href="/dashboard/add-product"
                 className="bg-[#00a99d] hover:brightness-95 text-white text-[14px] font-medium px-5 py-2 rounded-[3px] transition-all cursor-pointer border-0 leading-[22px] inline-block text-center"
               >
                 {t("Sell Now")}
@@ -985,12 +1005,27 @@ export default function Header({
         {mobileMenuOpen && (
           <div className="border-t border-gray-200 bg-white px-4 py-4 space-y-4">
             {/* Sell Now Mobile Button */}
-            <button
-              type="button"
-              className="w-full bg-[#00a99d] text-white font-medium py-2.5 rounded-[3px] text-[14px]"
-            >
-              Sell Now
-            </button>
+            {effectiveIsLoggedIn ? (
+              <Link
+                href="/dashboard/add-product"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block w-full bg-[#00a99d] hover:brightness-95 text-white font-medium py-2.5 rounded-[3px] text-[14px] text-center"
+              >
+                {t("Sell Now")}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (onOpenLoginModal) onOpenLoginModal();
+                  else openLoginModal();
+                }}
+                className="w-full bg-[#00a99d] text-white font-medium py-2.5 rounded-[3px] text-[14px] text-center"
+              >
+                {t("Sell Now")}
+              </button>
+            )}
 
             {/* Mobile Nav Tabs */}
             <div className="flex border-b border-gray-200">
@@ -1045,17 +1080,43 @@ export default function Header({
                           effectiveUser?.avatar ||
                           (isVendor
                             ? "/assets/img/trendshop-avatar.jpg"
+                            : effectiveUser?.role === "member"
+                            ? "/images/peter-jone-avatar.jpg"
+                            : effectiveUser?.role === "moderator"
+                            ? "/assets/img/roger-avatar.jpg"
                             : "/assets/img/admin-avatar.jpg")
                         }
-                        alt={effectiveUser?.name || (isVendor ? "Trendshop" : "Admin")}
+                        alt={
+                          effectiveUser?.name ||
+                          (isVendor
+                            ? "Trendshop"
+                            : effectiveUser?.role === "member"
+                            ? "Member"
+                            : effectiveUser?.role === "moderator"
+                            ? "Moderator"
+                            : "Admin")
+                        }
                         className="w-8 h-8 rounded-full object-cover shrink-0 ring-1 ring-black/10"
                       />
                       <div>
                         <div className="text-[14px] font-semibold text-gray-800">
-                          {effectiveUser?.name || (isVendor ? "Trendshop" : "Admin")}
+                          {effectiveUser?.name ||
+                            (isVendor
+                              ? "Trendshop"
+                              : effectiveUser?.role === "member"
+                              ? "Member"
+                              : effectiveUser?.role === "moderator"
+                              ? "Moderator"
+                              : "Admin")}
                         </div>
                         <div className="text-[11px] text-gray-500">
-                          {isVendor ? "Vendor" : "Administrator"}
+                          {isVendor
+                            ? "Vendor"
+                            : effectiveUser?.role === "member"
+                            ? "Member"
+                            : effectiveUser?.role === "moderator"
+                            ? "Moderator"
+                            : "Administrator"}
                         </div>
                       </div>
                     </div>
@@ -1068,10 +1129,10 @@ export default function Header({
                             <button
                               key={item.title}
                               type="button"
-                              onClick={() => {
+                              onClick={async () => {
                                 setMobileMenuOpen(false);
                                 if (onLogout) onLogout();
-                                logout();
+                                await logout();
                               }}
                               className="flex items-center gap-2 p-1.5 text-[12px] text-red-600 hover:text-red-700 hover:bg-white rounded transition-colors text-left bg-transparent border-0 cursor-pointer"
                             >

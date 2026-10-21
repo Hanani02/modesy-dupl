@@ -519,7 +519,7 @@ export default function AdminHeader() {
 
             {/* Sell Now Button (matches photo green button) */}
             <Link
-              href="/admin/dashboard"
+              href="/admin/dashboard/add-product"
               className="bg-[#00a99d] hover:brightness-95 text-white text-[14px] font-medium px-5 py-2 rounded-[3px] transition-all cursor-pointer border-0 leading-[22px] inline-block text-center"
             >
               {t("Sell Now")}
@@ -803,7 +803,7 @@ export default function AdminHeader() {
           <div className="border-t border-gray-200 bg-white px-4 py-4 space-y-4">
             {/* Sell Now Mobile Button */}
             <Link
-              href="/admin/dashboard"
+              href="/admin/dashboard/add-product"
               onClick={() => setMobileMenuOpen(false)}
               className="block w-full bg-[#00a99d] text-white font-medium py-2.5 rounded-[3px] text-[14px] text-center"
             >
@@ -860,6 +860,22 @@ export default function AdminHeader() {
                   <div className="grid grid-cols-2 gap-1.5">
                     {visibleMenus.map((item) => {
                       const Icon = item.icon;
+                      if (item.title === "Logout") {
+                        return (
+                          <button
+                            key={item.title}
+                            type="button"
+                            onClick={() => {
+                              setMobileMenuOpen(false);
+                              logout();
+                            }}
+                            className="flex items-center gap-2 p-1.5 text-[12px] text-red-600 hover:text-red-700 hover:bg-white rounded transition-colors text-left bg-transparent border-0 cursor-pointer w-full"
+                          >
+                            <Icon className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                            <span className="truncate">{t(item.title)}</span>
+                          </button>
+                        );
+                      }
                       return (
                         <Link
                           key={item.title}

@@ -87,16 +87,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    const isExplicitLogout =
+      typeof window !== "undefined" &&
+      sessionStorage.getItem("modesy_explicit_logout") === "true";
+
     // 1. First check local storage for instant offline/mock render
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // Clean up legacy auto-injected mock vendor user
-        if (parsed?.id === "00000000-0000-0000-0000-000000000002" && parsed?.email === "trendshop@gmail.com") {
-          localStorage.removeItem(STORAGE_KEY);
-        } else {
-          setUser(parsed);
+      if (isExplicitLogout) {
+        setUser(null);
+      } else {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          // Clean up legacy auto-injected mock vendor user
+          if (parsed?.id === "00000000-0000-0000-0000-000000000002" && parsed?.email === "trendshop@gmail.com") {
+            localStorage.removeItem(STORAGE_KEY);
+          } else {
+            setUser(parsed);
+          }
         }
       }
     } catch (e) {
@@ -108,6 +116,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 2. If Supabase is configured, listen to Supabase Auth State
     if (isSupabaseConfigured()) {
       supabase.auth.getSession().then(({ data: { session } }) => {
+        const hasExplicitLogout =
+          typeof window !== "undefined" &&
+          sessionStorage.getItem("modesy_explicit_logout") === "true";
+        if (hasExplicitLogout) {
+          setUser(null);
+          return;
+        }
+
         if (session?.user) {
           syncSupabaseUser(session.user);
         }
@@ -115,13 +131,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const { data: authListener } = supabase.auth.onAuthStateChange(
         async (_event, session) => {
+          const hasExplicitLogout =
+            typeof window !== "undefined" &&
+            sessionStorage.getItem("modesy_explicit_logout") === "true";
+          if (hasExplicitLogout) {
+            setUser(null);
+            return;
+          }
+
           if (session?.user) {
             await syncSupabaseUser(session.user);
           } else {
-            const isExplicitLogout = sessionStorage.getItem("modesy_explicit_logout") === "true";
-            if (isExplicitLogout) {
-              setUser(null);
-            }
+            setUser(null);
           }
         }
       );
@@ -132,13 +153,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const handleAuthChange = (e: any) => {
-      if (e?.detail) {
+      if (e?.detail !== undefined) {
         setUser(e.detail);
       } else {
         try {
-          const stored = localStorage.getItem(STORAGE_KEY);
-          if (stored) setUser(JSON.parse(stored));
-        } catch {}
+          const hasExplicitLogout =
+            typeof window !== "undefined" &&
+            sessionStorage.getItem("modesy_explicit_logout") === "true";
+          if (hasExplicitLogout) {
+            setUser(null);
+          } else {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            setUser(stored ? JSON.parse(stored) : null);
+          }
+        } catch {
+          setUser(null);
+        }
       }
     };
     window.addEventListener("modesy_auth_change", handleAuthChange);
@@ -412,21 +442,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    try {
+      sessionStorage.setItem("modesy_explicit_logout", "true");
+      localStorage.removeItem(STORAGE_KEY);
+      // Clean up all Supabase auth token keys in localStorage
+      if (typeof window !== "undefined") {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i);
+          if (key && (key.startsWith("sb-") || key === STORAGE_KEY)) {
+            localStorage.removeItem(key);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to clear local user", e);
+    }
+
     if (isSupabaseConfigured()) {
       try {
-        await supabase.auth.signOut();
+        await supabase.auth.signOut({ scope: "local" });
       } catch (e) {
         console.error("Supabase sign out error:", e);
       }
     }
+
     setUser(null);
     try {
-      localStorage.removeItem(STORAGE_KEY);
-      sessionStorage.setItem("modesy_explicit_logout", "true");
-    } catch (e) {
-      console.error("Failed to clear user", e);
+      window.dispatchEvent(new CustomEvent("modesy_auth_change", { detail: null }));
+    } catch (e) {}
+
+    if (typeof window !== "undefined") {
+      window.location.href = "/guest";
+    } else {
+      router.replace("/guest");
     }
-    router.push("/");
   };
 
   const openLoginModal = () => setIsLoginModalOpen(true);

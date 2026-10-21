@@ -17,6 +17,12 @@ export default function GuestLayout({
 
   useEffect(() => {
     if (!isInitialized) return;
+    const isExplicitLogout =
+      typeof window !== "undefined" &&
+      sessionStorage.getItem("modesy_explicit_logout") === "true";
+
+    if (isExplicitLogout) return;
+
     // If authenticated user lands on guest pages, redirect to their role's page
     if (user) {
       if (pathname === "/guest" || pathname === "/guest/") {

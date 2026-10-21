@@ -45,6 +45,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/client";
 
 interface ProductDetailViewProps {
   productId?: number | string;
+  productSlug?: string;
 }
 
 const COUNTRIES_DATA: Record<string, string[]> = {
@@ -62,12 +63,14 @@ const COUNTRIES_DATA: Record<string, string[]> = {
 
 export default function ProductDetailView({
   productId = 41,
+  productSlug,
 }: ProductDetailViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const lookupKey = productSlug || productId;
   // Resolve current product from registry or dynamic state
-  const initialProduct = getProductByIdOrSlug(productId);
+  const initialProduct = getProductByIdOrSlug(lookupKey);
   const [product, setProduct] = useState<DetailedProduct>(initialProduct);
 
   // Gallery
@@ -83,39 +86,39 @@ export default function ProductDetailView({
   );
 
   useEffect(() => {
-    const resolved = getProductByIdOrSlug(productId);
+    const key = productSlug || productId;
+    const resolved = getProductByIdOrSlug(key);
     setProduct(resolved);
     setActiveImageIndex(0);
     setSelectedSize(resolved.sizes && resolved.sizes.length > 0 ? resolved.sizes[0] : "");
     setSelectedColor(resolved.colors && resolved.colors.length > 0 ? resolved.colors[0].name : "");
 
-    if (isSupabaseConfigured() && typeof productId === "string") {
-      getProductBySlugOrId(productId).then(({ data }) => {
-        if (data) {
-          const imgs =
-            data.product_images && data.product_images.length > 0
-              ? data.product_images.map((i: any) => i.image_url)
-              : [resolved.image];
+    // Query custom products / Supabase by slug or ID
+    getProductBySlugOrId(String(key)).then(({ data }) => {
+      if (data) {
+        const imgs =
+          data.product_images && data.product_images.length > 0
+            ? data.product_images.map((i: any) => i.image_url)
+            : [resolved.image];
 
-          setProduct((prev) => ({
-            ...prev,
-            slug: data.slug || prev.slug,
-            title: data.title || prev.title,
-            price: `$${Number(data.price).toFixed(2)}`,
-            sku: data.sku || prev.sku,
-            description: data.description || data.short_description || prev.description,
-            image: imgs[0] || prev.image,
-            images: imgs,
-            seller: data.profiles?.username || prev.seller,
-            category: data.categories?.name || prev.category,
-            rating: Number(data.rating_avg) || prev.rating,
-            reviewsCount: data.review_count || prev.reviewsCount,
-            status: data.stock > 0 ? "In Stock" : "Out of Stock",
-          }));
-        }
-      });
-    }
-  }, [productId]);
+        setProduct((prev) => ({
+          ...prev,
+          slug: data.slug || prev.slug,
+          title: data.title || prev.title,
+          price: `$${Number(data.price).toFixed(2)}`,
+          sku: data.sku || prev.sku,
+          description: data.description || data.short_description || prev.description,
+          image: imgs[0] || prev.image,
+          images: imgs,
+          seller: data.profiles?.username || prev.seller,
+          category: data.categories?.name || prev.category,
+          rating: Number(data.rating_avg) || prev.rating,
+          reviewsCount: data.review_count || prev.reviewsCount,
+          status: data.stock > 0 ? "In Stock" : "Out of Stock",
+        }));
+      }
+    });
+  }, [productId, productSlug]);
 
   const { user } = useAuth();
   const { isInWishlist, toggleWishlist: contextToggleWishlist } = useWishlist();

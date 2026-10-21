@@ -114,7 +114,6 @@ export default function VendorDashboardNavbar({
   const handleLogout = () => {
     setProfileDropdownOpen(false);
     logout();
-    router.push("/");
   };
 
   return (

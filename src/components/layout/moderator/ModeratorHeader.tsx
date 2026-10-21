@@ -304,7 +304,6 @@ export default function ModeratorHeader() {
                     onClick={() => {
                       setModDropdownOpen(false);
                       if (logout) logout();
-                      window.location.href = "/guest";
                     }}
                     className="w-full text-left flex items-center gap-3 px-4 py-2 text-[#444] hover:bg-gray-50 hover:text-[#00a99d] transition-colors font-normal group bg-transparent border-0 cursor-pointer"
                   >
@@ -390,7 +389,7 @@ export default function ModeratorHeader() {
 
             {/* Sell Now Button (matches photo green/teal button) */}
             <Link
-              href="/moderator/dashboard"
+              href="/moderator/admin-panel/products/add-product"
               className="bg-[#00a99d] hover:brightness-95 text-white text-[14px] font-medium px-5 py-2 rounded-[3px] transition-all cursor-pointer border-0 leading-[22px] inline-block text-center shadow-xs"
             >
               {t("Sell Now")}
@@ -615,7 +614,7 @@ export default function ModeratorHeader() {
         {mobileMenuOpen && (
           <div className="border-t border-gray-200 bg-white px-4 py-4 space-y-4">
             <Link
-              href="/moderator/dashboard"
+              href="/moderator/admin-panel/products/add-product"
               onClick={() => setMobileMenuOpen(false)}
               className="block w-full bg-[#00a99d] text-white font-medium py-2.5 rounded-[3px] text-[14px] text-center"
             >
@@ -682,6 +681,17 @@ export default function ModeratorHeader() {
                         </Link>
                       );
                     })}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        if (logout) logout();
+                      }}
+                      className="flex items-center gap-2 p-1.5 text-[12px] text-red-600 hover:text-red-700 hover:bg-white rounded transition-colors text-left bg-transparent border-0 cursor-pointer col-span-2"
+                    >
+                      <LogOut className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                      <span className="truncate">{t("Logout")}</span>
+                    </button>
                   </div>
                 </div>
 

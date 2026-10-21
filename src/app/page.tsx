@@ -10,7 +10,13 @@ export default function RootPage() {
 
   useEffect(() => {
     if (!isInitialized) return;
-    if (user?.role === "admin") {
+    const isExplicitLogout =
+      typeof window !== "undefined" &&
+      sessionStorage.getItem("modesy_explicit_logout") === "true";
+
+    if (isExplicitLogout || !user) {
+      router.replace("/guest");
+    } else if (user?.role === "admin") {
       router.replace("/admin");
     } else if (user?.role === "vendor") {
       router.replace("/vendor");

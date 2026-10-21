@@ -231,7 +231,6 @@ export default function ModeratorPanelNavbar({ onToggleSidebar }: NavbarProps) {
                 onClick={() => {
                   setProfileDropdownOpen(false);
                   if (logout) logout();
-                  window.location.href = "/guest";
                 }}
                 className="w-full text-left flex items-center gap-3 px-4 py-2 text-[14px] text-gray-700 hover:text-[#00a99d] hover:bg-gray-50/80 transition-colors font-normal group cursor-pointer border-0 bg-transparent"
               >

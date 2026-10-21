@@ -26,7 +26,7 @@ import AiContentGeneratorModal from "./AiContentGeneratorModal";
 import { CATEGORIES } from "@/data/categories";
 import { initialDashboardProducts } from "@/components/admin/dashboard/products/mockData";
 import { ProductItem } from "@/components/admin/dashboard/products/types";
-import { updateProduct } from "@/lib/supabase/products";
+import { updateProduct, getCustomProducts } from "@/lib/supabase/products";
 
 export interface EditProductImage {
   id: string;
@@ -46,11 +46,33 @@ export default function VendorEditProductView({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
 
-  // Find target product from mockData
+  // Find target product from custom products or mockData
   const numericId = Number(productId) || 47;
-  const initialProduct =
-    initialDashboardProducts.find((p) => p.id === numericId) ||
-    initialDashboardProducts[0];
+  const customList = typeof window !== "undefined" ? getCustomProducts() : [];
+  const matchedCustom = customList.find(
+    (c, idx) =>
+      c.id === String(productId) ||
+      c.slug === String(productId) ||
+      5000 + idx === numericId
+  );
+
+  const initialProduct = matchedCustom
+    ? {
+        id: numericId,
+        uuid: matchedCustom.id,
+        title: matchedCustom.title,
+        sku: matchedCustom.sku || "",
+        productType: matchedCustom.product_type === "digital" ? ("Digital" as const) : ("Physical" as const),
+        listingType: matchedCustom.listing_type === "sell_on_site" ? "Sell Now" : "Classified Ads",
+        category: matchedCustom.categories?.name || "General",
+        price: `$${Number(matchedCustom.price).toFixed(2)}`,
+        stock: matchedCustom.stock > 0 ? `In Stock (${matchedCustom.stock})` : "Out of Stock",
+        pageViews: 0,
+        date: new Date().toISOString().slice(0, 10),
+        image: matchedCustom.product_images?.[0]?.image_url || "/images/products/midi-skirt.webp",
+      }
+    : initialDashboardProducts.find((p) => p.id === numericId) ||
+      initialDashboardProducts[0];
 
   // Current Step: 1 = General Info, 2 = Details & Pricing
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
@@ -234,20 +256,18 @@ export default function VendorEditProductView({
       const numericPrice = parseFloat(price.replace(/[^0-9.]/g, "")) || 0;
       const imageUrls = images.map((i) => i.url);
 
-      if (typeof productId === "string" && productId.includes("-")) {
-        await updateProduct({
-          id: productId,
-          title,
-          short_description: shortDescription,
-          description,
-          price: numericPrice,
-          sku,
-          stock: isUnlimitedStock ? 9999 : parseInt(stock, 10) || 10,
-          images: imageUrls,
-        });
-      }
+      await updateProduct({
+        id: matchedCustom?.id || String(productId),
+        title,
+        short_description: shortDescription,
+        description,
+        price: numericPrice,
+        sku,
+        stock: isUnlimitedStock ? 9999 : parseInt(stock, 10) || 10,
+        images: imageUrls,
+      });
     } catch (err) {
-      console.error("Failed to update product in Supabase:", err);
+      console.error("Failed to update product:", err);
     }
     setSaveSuccess(true);
     setTimeout(() => {

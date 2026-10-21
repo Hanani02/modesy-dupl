@@ -32,7 +32,7 @@ export default async function SlugProductPage({ params }: SlugPageProps) {
         </div>
       }
     >
-      <ProductDetailView productId={product.id} />
+      <ProductDetailView productId={product.id} productSlug={slug} />
     </Suspense>
   );
 }

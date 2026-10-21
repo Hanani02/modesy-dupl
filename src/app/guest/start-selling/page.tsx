@@ -6,7 +6,7 @@ import { Store, CheckCircle, ArrowRight, ShieldCheck, TrendingUp, Users } from "
 import { useAuth } from "@/context/AuthContext";
 
 export default function GuestStartSellingPage() {
-  const { openLoginModal } = useAuth();
+  const { user, openLoginModal } = useAuth();
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
@@ -46,14 +46,24 @@ export default function GuestStartSellingPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={openLoginModal}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#00a99d] hover:bg-[#008f85] text-white px-8 py-3 rounded font-bold text-sm shadow-xs transition cursor-pointer"
-          >
-            <span>Start Selling Now</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          {user ? (
+            <Link
+              href="/dashboard/add-product"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#00a99d] hover:bg-[#008f85] text-white px-8 py-3 rounded font-bold text-sm shadow-xs transition cursor-pointer"
+            >
+              <span>Start Selling Now</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={openLoginModal}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#00a99d] hover:bg-[#008f85] text-white px-8 py-3 rounded font-bold text-sm shadow-xs transition cursor-pointer"
+            >
+              <span>Start Selling Now</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          )}
           <Link
             href="/guest/register"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded font-semibold text-sm transition"

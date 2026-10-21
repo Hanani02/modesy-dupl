@@ -27,7 +27,7 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function MemberHeader() {
-  const { user, logout } = useAuth();
+  const { user, openLoginModal, logout } = useAuth();
   const { totalCartItems } = useCart();
   const { totalWishlistItems } = useWishlist();
   const { currency, currencies, setCurrencyCode } = useCurrency();
@@ -217,82 +217,104 @@ export default function MemberHeader() {
             </div>
 
             {/* Member Profile Dropdown (Modesy Style) */}
-            <div className="relative" ref={userRef}>
-              <button
-                type="button"
-                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="flex items-center gap-2 text-[#333] hover:text-[#00a99d] font-medium text-[14px] cursor-pointer bg-transparent border-0 p-0"
-              >
-                <img
-                  src={user?.avatar || "/images/peter-jone-avatar.jpg"}
-                  alt={user?.name || "Member"}
-                  className="w-6 h-6 rounded-full object-cover ring-1 ring-black/10"
-                />
-                <span>{user?.name || "Member"}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
-              </button>
+            {user ? (
+              <div className="relative" ref={userRef}>
+                <button
+                  type="button"
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="flex items-center gap-2 text-[#333] hover:text-[#00a99d] font-medium text-[14px] cursor-pointer bg-transparent border-0 p-0"
+                >
+                  <img
+                    src={user.avatar || "/images/peter-jone-avatar.jpg"}
+                    alt={user.name || "Member"}
+                    className="w-6 h-6 rounded-full object-cover ring-1 ring-black/10"
+                  />
+                  <span>{user.name || "Member"}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+                </button>
 
-              {userDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-44 bg-white border border-[#ebebeb] rounded-sm shadow-md z-50 py-1.5 text-[13px]">
-                  <Link
-                    href="/member/profile"
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d] transition-colors"
-                  >
-                    <User className="w-4 h-4 text-gray-400 stroke-[1.8]" />
-                    <span>{t("Profile")}</span>
-                  </Link>
-                  <Link
-                    href="/member/wallet"
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d] transition-colors"
-                  >
-                    <Wallet className="w-4 h-4 text-gray-400 stroke-[1.8]" />
-                    <span>{t("Wallet")}</span>
-                  </Link>
-                  <Link
-                    href="/member/orders"
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d] transition-colors"
-                  >
-                    <ShoppingBag className="w-4 h-4 text-gray-400 stroke-[1.8]" />
-                    <span>{t("Orders")}</span>
-                  </Link>
-                  <Link
-                    href="/member/my-coupons"
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d] transition-colors"
-                  >
-                    <Tag className="w-4 h-4 text-gray-400 stroke-[1.8]" />
-                    <span>{t("My Coupons")}</span>
-                  </Link>
-                  <Link
-                    href="/member/messages"
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d] transition-colors"
-                  >
-                    <MessageSquare className="w-4 h-4 text-gray-400 stroke-[1.8]" />
-                    <span>{t("Messages")}</span>
-                  </Link>
-                  <Link
-                    href="/member/settings"
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d] transition-colors"
-                  >
-                    <Settings className="w-4 h-4 text-gray-400 stroke-[1.8]" />
-                    <span>{t("Profile Settings")}</span>
-                  </Link>
-                  <Link
-                    href="/guest"
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d] transition-colors"
-                  >
-                    <LogOut className="w-4 h-4 text-gray-400 stroke-[1.8]" />
-                    <span>{t("Logout")}</span>
-                  </Link>
-                </div>
-              )}
-            </div>
+                {userDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-44 bg-white border border-[#ebebeb] rounded-sm shadow-md z-50 py-1.5 text-[13px]">
+                    <Link
+                      href="/member/profile"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d] transition-colors"
+                    >
+                      <User className="w-4 h-4 text-gray-400 stroke-[1.8]" />
+                      <span>{t("Profile")}</span>
+                    </Link>
+                    <Link
+                      href="/member/wallet"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d] transition-colors"
+                    >
+                      <Wallet className="w-4 h-4 text-gray-400 stroke-[1.8]" />
+                      <span>{t("Wallet")}</span>
+                    </Link>
+                    <Link
+                      href="/member/orders"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d] transition-colors"
+                    >
+                      <ShoppingBag className="w-4 h-4 text-gray-400 stroke-[1.8]" />
+                      <span>{t("Orders")}</span>
+                    </Link>
+                    <Link
+                      href="/member/my-coupons"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d] transition-colors"
+                    >
+                      <Tag className="w-4 h-4 text-gray-400 stroke-[1.8]" />
+                      <span>{t("My Coupons")}</span>
+                    </Link>
+                    <Link
+                      href="/member/messages"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d] transition-colors"
+                    >
+                      <MessageSquare className="w-4 h-4 text-gray-400 stroke-[1.8]" />
+                      <span>{t("Messages")}</span>
+                    </Link>
+                    <Link
+                      href="/member/settings"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d] transition-colors"
+                    >
+                      <Settings className="w-4 h-4 text-gray-400 stroke-[1.8]" />
+                      <span>{t("Profile Settings")}</span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setUserDropdownOpen(false);
+                        await logout();
+                      }}
+                      className="w-full text-left flex items-center gap-2.5 px-4 py-2 text-gray-700 hover:bg-gray-50 hover:text-[#00a99d] transition-colors bg-transparent border-0 cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4 text-gray-400 stroke-[1.8]" />
+                      <span>{t("Logout")}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2 text-[14px]">
+                <button
+                  type="button"
+                  onClick={() => openLoginModal()}
+                  className="text-[#666] hover:text-[#00a99d] transition-colors cursor-pointer bg-transparent border-0 p-0 font-medium"
+                >
+                  {t("Login")}
+                </button>
+                <span className="text-gray-300">/</span>
+                <Link
+                  href="/register"
+                  className="text-[#666] hover:text-[#00a99d] transition-colors font-medium"
+                >
+                  {t("Register")}
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -601,35 +623,63 @@ export default function MemberHeader() {
 
             {mobileTab === "menu" ? (
               <div className="space-y-1 py-2">
-                {/* Profile Summary Box */}
-                <div className="p-3 bg-gray-50 rounded border border-gray-200 mb-3 flex items-center gap-3">
-                  <img
-                    src={user?.avatar || "/images/peter-jone-avatar.jpg"}
-                    alt={user?.name || "Member"}
-                    className="w-10 h-10 rounded-full object-cover border border-gray-200"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-gray-900 truncate">{user?.name || "Member"}</p>
-                    <p className="text-xs text-gray-500 truncate">{user?.email || "members@gmail.com"}</p>
-                  </div>
-                </div>
+                {user ? (
+                  <>
+                    {/* Profile Summary Box */}
+                    <div className="p-3 bg-gray-50 rounded border border-gray-200 mb-3 flex items-center gap-3">
+                      <img
+                        src={user.avatar || "/images/peter-jone-avatar.jpg"}
+                        alt={user.name || "Member"}
+                        className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-gray-900 truncate">{user.name || "Member"}</p>
+                        <p className="text-xs text-gray-500 truncate">{user.email || "members@gmail.com"}</p>
+                      </div>
+                    </div>
 
-                <div className="grid grid-cols-2 gap-1.5 pb-2 border-b border-gray-100">
-                  {memberMenuItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.title}
-                        href={item.href}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-2 p-2 text-xs text-gray-700 hover:text-[#00a99d] hover:bg-gray-50 rounded transition-colors"
+                    <div className="grid grid-cols-2 gap-1.5 pb-2 border-b border-gray-100">
+                      {memberMenuItems.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <Link
+                            key={item.title}
+                            href={item.href}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center gap-2 p-2 text-xs text-gray-700 hover:text-[#00a99d] hover:bg-gray-50 rounded transition-colors"
+                          >
+                            <Icon className="w-4 h-4 text-gray-400 shrink-0" />
+                            <span className="truncate">{t(item.title)}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <div className="p-3 bg-gray-50 rounded border border-gray-200 mb-3 flex items-center justify-between">
+                    <span className="text-xs text-gray-600 font-medium">{t("Account")}</span>
+                    <div className="flex items-center space-x-2 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          openLoginModal();
+                        }}
+                        className="text-[#00a99d] font-semibold bg-transparent border-0 cursor-pointer"
                       >
-                        <Icon className="w-4 h-4 text-gray-400 shrink-0" />
-                        <span className="truncate">{t(item.title)}</span>
+                        {t("Login")}
+                      </button>
+                      <span className="text-gray-300">/</span>
+                      <Link
+                        href="/register"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="text-gray-700 font-medium"
+                      >
+                        {t("Register")}
                       </Link>
-                    );
-                  })}
-                </div>
+                    </div>
+                  </div>
+                )}
 
                 <Link
                   href="/member"
@@ -652,18 +702,19 @@ export default function MemberHeader() {
                 >
                   {t("Orders")}
                 </Link>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    logout();
-                    router.push("/guest");
-                  }}
-                  className="w-full text-left py-2 text-[14px] text-red-600 hover:text-red-700 flex items-center gap-2 cursor-pointer bg-transparent border-0"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>{t("Logout")}</span>
-                </button>
+                {user && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setMobileMenuOpen(false);
+                      await logout();
+                    }}
+                    className="w-full text-left py-2 text-[14px] text-red-600 hover:text-red-700 flex items-center gap-2 cursor-pointer bg-transparent border-0"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>{t("Logout")}</span>
+                  </button>
+                )}
               </div>
             ) : (
               <div className="space-y-1 py-2">

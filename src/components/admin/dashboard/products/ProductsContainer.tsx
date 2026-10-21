@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import ProductFilterSection from "./ProductFilterSection";
 import ProductTable from "./ProductTable";
@@ -9,7 +11,14 @@ import ProductPromoteModal from "./ProductPromoteModal";
 import ProductDeleteModal from "./ProductDeleteModal";
 import { ProductFilterState, ProductItem } from "./types";
 import { initialDashboardProducts } from "./mockData";
-import { getProducts, deleteProduct, createProduct, updateProduct } from "@/lib/supabase/products";
+import {
+  getProducts,
+  deleteProduct,
+  createProduct,
+  updateProduct,
+  getCustomProducts,
+  PRODUCTS_CHANGE_EVENT,
+} from "@/lib/supabase/products";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 
 import { matchesProductCategory } from "./categoryData";
@@ -42,12 +51,40 @@ function ProductsContainerContent({
   const [deleteProductTarget, setDeleteProductTarget] = useState<ProductItem | null>(null);
 
   useEffect(() => {
-    async function loadSupabaseProducts() {
+    async function loadAllProducts() {
+      // 1. Load custom created products from localStorage
+      const customItems = getCustomProducts();
+      const customMapped: ProductItem[] = customItems.map((db, idx) => {
+        const primaryImg =
+          db.product_images?.find((img) => img.is_primary)?.image_url ||
+          db.product_images?.[0]?.image_url ||
+          (Array.isArray((db as any).images) ? (db as any).images[0] : null) ||
+          "/images/products/midi-skirt.webp";
+
+        return {
+          id: typeof db.id === "number" ? db.id : 5000 + idx,
+          uuid: String(db.id),
+          title: db.title,
+          sku: db.sku || "",
+          productType: db.product_type === "digital" ? "Digital" : "Physical",
+          listingType: db.listing_type === "sell_on_site" ? "Sell Now" : "Classified Ads",
+          category: db.categories?.name || (db as any).category || "General",
+          price: `$${Number(db.price).toFixed(2)}`,
+          stock: (db.stock ?? 1) > 0 ? `In Stock (${db.stock ?? 10})` : "Out of Stock",
+          pageViews: Number(db.views_count) || 0,
+          date: new Date(db.created_at || Date.now()).toISOString().slice(0, 10),
+          isFeatured: db.is_featured,
+          image: primaryImg,
+        };
+      });
+
+      // 2. Load Supabase products if configured
+      let dbMapped: ProductItem[] = [];
       if (isSupabaseConfigured()) {
         try {
           const { data } = await getProducts();
           if (data && data.length > 0) {
-            const mapped: ProductItem[] = data.map((db, idx) => {
+            dbMapped = data.map((db, idx) => {
               const primaryImg =
                 db.product_images?.find((img) => img.is_primary)?.image_url ||
                 db.product_images?.[0]?.image_url ||
@@ -69,14 +106,39 @@ function ProductsContainerContent({
                 image: primaryImg,
               };
             });
-            setProducts(mapped);
           }
         } catch (e) {
           console.error("Error loading products from Supabase:", e);
         }
       }
+
+      // Merge: custom items first, then DB items or initial mock items
+      const combined = [...customMapped];
+      const seenUuids = new Set(customMapped.map((c) => c.uuid));
+      const seenTitles = new Set(customMapped.map((c) => c.title.toLowerCase().trim()));
+
+      const sourceList = dbMapped.length > 0 ? dbMapped : initialItems;
+      for (const item of sourceList) {
+        const itemTitle = item.title.toLowerCase().trim();
+        if ((!item.uuid || !seenUuids.has(item.uuid)) && !seenTitles.has(itemTitle)) {
+          combined.push(item);
+          if (item.uuid) seenUuids.add(item.uuid);
+          seenTitles.add(itemTitle);
+        }
+      }
+
+      setProducts(combined);
     }
-    loadSupabaseProducts();
+
+    loadAllProducts();
+
+    const handleProductsChange = () => {
+      loadAllProducts();
+    };
+    window.addEventListener(PRODUCTS_CHANGE_EVENT, handleProductsChange);
+    return () => {
+      window.removeEventListener(PRODUCTS_CHANGE_EVENT, handleProductsChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -374,9 +436,16 @@ function ProductsContainerContent({
 
   return (
     <div className="bg-white border border-[#ebebeb] rounded-[3px] p-6 shadow-xs">
-      {/* Title */}
-      <div className="mb-5">
+      {/* Title & Add Product Button */}
+      <div className="flex items-center justify-between mb-5">
         <h1 className="text-[15px] font-semibold text-[#333]">{title}</h1>
+        <Link
+          href={pathname?.startsWith("/admin") ? "/admin/dashboard/add-product" : "/dashboard/add-product"}
+          className="inline-flex items-center gap-1.5 bg-[#00a99d] hover:bg-[#008f85] text-white text-xs font-semibold px-3.5 py-2 rounded-[3px] transition shadow-xs"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add Product</span>
+        </Link>
       </div>
 
       {/* Filter Section */}
